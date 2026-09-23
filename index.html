@@ -69,6 +69,10 @@ tr.row-btn:hover td{background:var(--surface2)}
 .mini-fb .mdot.note-char{animation:charPulseSm 1.6s ease-in-out infinite}
 @keyframes charPulse{0%,100%{box-shadow:0 0 0 0 rgba(228,100,60,.7)}50%{box-shadow:0 0 0 6px rgba(228,100,60,0)}}
 @keyframes charPulseSm{0%,100%{box-shadow:0 0 0 0 rgba(228,100,60,.7)}50%{box-shadow:0 0 0 4px rgba(228,100,60,0)}}
+.eder-letter{cursor:pointer;display:inline-block;transition:transform .18s ease,color .18s ease;user-select:none}
+.eder-letter:hover{animation:ederWiggle .5s ease}
+.eder-letter:active{transform:scale(.88) translateY(2px)}
+@keyframes ederWiggle{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-8px) rotate(-8deg)}50%{transform:translateY(0) rotate(6deg)}75%{transform:translateY(-4px) rotate(-4deg)}100%{transform:translateY(0) rotate(0)}}
 .dot.openn{box-shadow:0 0 0 3px rgba(237,230,214,.55),0 1px 4px rgba(0,0,0,.5)}
 .dot.dim2{opacity:.28}
 .dot.flash{box-shadow:0 0 0 4px #fff,0 0 14px 4px rgba(255,255,255,.7);transform:translate(-50%,-50%) scale(1.22);z-index:6}
@@ -655,10 +659,10 @@ tr.row-btn:hover td{background:var(--surface2)}
     <div class="card" style="border:1.5px solid var(--brass);text-align:center">
       <h3 style="margin-top:0;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-soft);font-weight:700">Dedicatoria</h3>
       <div style="display:flex;justify-content:center;gap:22px;flex-wrap:wrap;margin:18px 0">
-        <div><div style="font-family:'Fraunces',serif;font-size:38px;color:var(--brass)">E</div><div class="muted" style="font-size:12px;margin-top:2px">Escalas</div></div>
-        <div><div style="font-family:'Fraunces',serif;font-size:38px;color:var(--teal)">D</div><div class="muted" style="font-size:12px;margin-top:2px">Diapasón</div></div>
-        <div><div style="font-family:'Fraunces',serif;font-size:38px;color:var(--brass)">E</div><div class="muted" style="font-size:12px;margin-top:2px">Expresión</div></div>
-        <div><div style="font-family:'Fraunces',serif;font-size:38px;color:var(--teal)">R</div><div class="muted" style="font-size:12px;margin-top:2px">Raíz</div></div>
+        <div><div class="eder-letter" onclick="playEderNote(0)" style="font-family:'Fraunces',serif;font-size:38px;color:var(--brass)">E</div><div class="muted" style="font-size:12px;margin-top:2px">Escalas</div></div>
+        <div><div class="eder-letter" onclick="playEderNote(1)" style="font-family:'Fraunces',serif;font-size:38px;color:var(--teal)">D</div><div class="muted" style="font-size:12px;margin-top:2px">Diapasón</div></div>
+        <div><div class="eder-letter" onclick="playEderNote(2)" style="font-family:'Fraunces',serif;font-size:38px;color:var(--brass)">E</div><div class="muted" style="font-size:12px;margin-top:2px">Expresión</div></div>
+        <div><div class="eder-letter" onclick="playEderNote(3)" style="font-family:'Fraunces',serif;font-size:38px;color:var(--teal)">R</div><div class="muted" style="font-size:12px;margin-top:2px">Raíz</div></div>
       </div>
       <p style="max-width:480px;margin:0 auto">Esta app existe gracias a lo que me enseñó mi profesor <b>Eder</b>. Escalas, diapasón, expresión, raíz — cuatro palabras, un nombre.</p>
     </div>
@@ -974,6 +978,9 @@ function pluckExpressive(midi,t,dur,tech){
 }
 function strum(midis,gap=.055){const c=ctx(),n=c.currentTime;midis.forEach((m,i)=>pluck(m,n+i*gap));}
 function arp(midis,gap=.28,dur=.4){const c=ctx(),n=c.currentTime;midis.forEach((m,i)=>pluck(m,n+i*gap,dur));}
+/* Mini progresión original (Em-D-Em-C) para la dedicatoria: un acorde distinto por letra de E-D-E-R */
+const EDER_CHORDS=[[52,59,64,67],[50,57,62,66],[52,59,64,71],[48,55,60,64]];
+function playEderNote(i){ try{ strum(EDER_CHORDS[i],0.05); }catch(e){console.warn("Audio no disponible:",e);} }
 function playScaleFrom(off){const st=modeSteps(MODES.findIndex(m=>m.off===off));}
 function playCurrentScale(){
   const pcs=visibleScale().pcs;
