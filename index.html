@@ -63,6 +63,8 @@ tr.row-btn:hover td{background:var(--surface2)}
 .slabel{position:absolute;left:-30px;font-size:10px;color:var(--muted);transform:translateY(-50%);width:26px;text-align:right}
 .dot{position:absolute;width:26px;height:26px;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bg);z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;border:2px solid transparent}
 .dot.root{border-color:#fff}
+.dot.empty-slot{width:14px;height:14px;background:transparent!important;border:1.5px dashed rgba(237,230,214,.25);box-shadow:none;z-index:4}
+.dot.empty-slot:hover{border-color:rgba(237,230,214,.7);background:rgba(237,230,214,.08)!important}
 .dot.note-char{animation:charPulse 1.6s ease-in-out infinite}
 .mini-fb .mdot.note-char{animation:charPulseSm 1.6s ease-in-out infinite}
 @keyframes charPulse{0%,100%{box-shadow:0 0 0 0 rgba(228,100,60,.7)}50%{box-shadow:0 0 0 6px rgba(228,100,60,0)}}
@@ -164,6 +166,10 @@ tr.row-btn:hover td{background:var(--surface2)}
     <button class="btn" id="btnPlayScale">▶ Escuchar escala</button>
     <button class="btn" id="btnNamesGlobal">Ver: Grados/Roles 🔁</button>
     <select id="selInstrument"></select>
+    <select id="selNoteSystem">
+      <option value="latin">Do Re Mi</option>
+      <option value="en">C D E</option>
+    </select>
   </div>
 
   <nav class="tabs" id="tabs">
@@ -178,6 +184,7 @@ tr.row-btn:hover td{background:var(--surface2)}
     <button data-t="arpegios">Arpegios</button>
     <button data-t="licks">Licks y Riffs</button>
     <button data-t="caged">CAGED</button>
+    <button data-t="finder">Identificar acorde</button>
     <button data-t="practica">Práctica</button>
     <button data-t="ayuda">❓ Ayuda</button>
   </nav>
@@ -571,6 +578,29 @@ tr.row-btn:hover td{background:var(--surface2)}
     </div>
   </section>
 
+  <!-- ===================== IDENTIFICAR ACORDE ===================== -->
+  <section id="tab-finder" hidden>
+    <div class="card">
+      <h2>Identificar acorde</h2>
+      <p>Marca notas en el mástil (una por cuerda, como al tocar de verdad) y te digo qué acorde es — tónica, calidad, y si es la posición fundamental o qué inversión, mirando cuál es la nota más grave.</p>
+      <div class="controls">
+        <button class="btn" id="btnFinderReset">↺ Borrar todo</button>
+      </div>
+      <div class="fb-scroll"><div class="fretboard" id="fbFinder"></div></div>
+      <div class="legend">
+        <span><span class="sw" style="background:#C9A227;border:2px solid #fff"></span>R</span>
+        <span><span class="sw" style="background:#4FA8A0"></span>3ª</span>
+        <span><span class="sw" style="background:#E4C766"></span>5ª</span>
+        <span><span class="sw" style="background:#9C6FB8"></span>7ª</span>
+        <span>Pulsa una cuerda vacía para añadir una nota; pulsa una nota puesta para quitarla; pulsa otro traste de la misma cuerda para moverla.</span>
+      </div>
+    </div>
+    <div class="card" id="finderResultCard">
+      <h3 style="margin-top:0">Resultado</h3>
+      <div id="finderResult">Toca notas en el mástil de arriba para identificar el acorde.</div>
+    </div>
+  </section>
+
   <!-- ===================== AYUDA ===================== -->
   <section id="tab-ayuda" hidden>
     <div class="card">
@@ -610,6 +640,9 @@ tr.row-btn:hover td{background:var(--surface2)}
     <div class="card"><h3 style="margin-top:0">🅰️ CAGED</h3>
       <p>Las 5 formas de acorde abierto (C-A-G-E-D) movidas con cejilla para tocar el acorde de la tónica actual en 5 sitios distintos del mástil.</p>
     </div>
+    <div class="card"><h3 style="margin-top:0">🔍 Identificar acorde</h3>
+      <p>Al revés que el resto de la app: aquí pones tú las notas (una por cuerda) y la app identifica qué acorde es, con calidad y si es fundamental o inversión — mirando cuál es la nota más grave que hayas puesto.</p>
+    </div>
     <div class="card"><h3 style="margin-top:0">🎯 Práctica</h3>
       <p>4 modos de entrenamiento auditivo: adivina el grado, la calidad del acorde, el intervalo, o la nota en el mástil. Tras responder, ves la digitación correcta (y la tuya si fallaste) para comparar.</p>
     </div>
@@ -621,7 +654,10 @@ tr.row-btn:hover td{background:var(--surface2)}
 
 <script>
 /* ================= DATOS ================= */
-const NN=["Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"];
+const NN_LATIN=["Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"];
+const NN_EN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+let noteSystem="latin";
+let NN=NN_LATIN.slice();
 const MAJ=[0,2,4,5,7,9,11];
 const MODES=[
  {n:"Jónico",alias:"Mayor",off:0,d:"El sonido 'feliz' por defecto. Referencia de todo lo demás."},
@@ -694,22 +730,22 @@ const FPOS=(()=>{const max=1-Math.pow(2,-FRETS/12);const a=[0];for(let f=1;f<=FR
 const PROGS=[{n:"I – IV – V – I",d:[0,3,4,0]},{n:"I – V – vi – IV",d:[0,4,5,3]},{n:"ii – V – I",d:[1,4,0]},{n:"I – vi – ii – V",d:[0,5,1,4]},{n:"i – VI – VII – i",d:[0,5,6,0]}];
 /* Las 5 formas CAGED: solo tienen sentido en guitarra de 6 cuerdas con afinación estándar (acordes abiertos reales) */
 const CAGED_SHAPES=[
- {letter:"C",name:"Do",natural:0,frets:[null,3,2,0,1,0],roles:[null,"R","3","5","R","3"]},
- {letter:"A",name:"La",natural:9,frets:[null,0,2,2,2,0],roles:[null,"R","5","R","3","5"]},
- {letter:"G",name:"Sol",natural:7,frets:[3,2,0,0,0,3],roles:["R","3","5","R","3","R"]},
- {letter:"E",name:"Mi",natural:4,frets:[0,2,2,1,0,0],roles:["R","5","R","3","5","R"]},
- {letter:"D",name:"Re",natural:2,frets:[null,null,0,2,3,2],roles:[null,null,"R","5","R","3"]}
+ {letter:"C",natural:0,frets:[null,3,2,0,1,0],roles:[null,"R","3","5","R","3"]},
+ {letter:"A",natural:9,frets:[null,0,2,2,2,0],roles:[null,"R","5","R","3","5"]},
+ {letter:"G",natural:7,frets:[3,2,0,0,0,3],roles:["R","3","5","R","3","R"]},
+ {letter:"E",natural:4,frets:[0,2,2,1,0,0],roles:["R","5","R","3","5","R"]},
+ {letter:"D",natural:2,frets:[null,null,0,2,3,2],roles:[null,null,"R","5","R","3"]}
 ];
 /* Formas menores: solo E, A, D tienen equivalente en posición abierta (basta con mover un dedo).
    Do y Sol menor no son derivables así — su 3ª mayor ya está al aire, no se puede bajar sin cejilla completa. */
 const CAGED_SHAPES_MIN=[
- {letter:"E",name:"Mi",natural:4,frets:[0,2,2,0,0,0],roles:["R","5","R","3","5","R"]},
- {letter:"A",name:"La",natural:9,frets:[null,0,2,2,1,0],roles:[null,"R","5","R","3","5"]},
- {letter:"D",name:"Re",natural:2,frets:[null,null,0,2,3,1],roles:[null,null,"R","5","R","3"]}
+ {letter:"E",natural:4,frets:[0,2,2,0,0,0],roles:["R","5","R","3","5","R"]},
+ {letter:"A",natural:9,frets:[null,0,2,2,1,0],roles:[null,"R","5","R","3","5"]},
+ {letter:"D",natural:2,frets:[null,null,0,2,3,1],roles:[null,null,"R","5","R","3"]}
 ];
 function cagedShapeAt(shape,rootIndex){
   const shift=(rootIndex-shape.natural+12)%12;
-  return {letter:shape.letter,name:shape.name,shift,frets:shape.frets.map(f=>f===null?null:f+shift),roles:shape.roles};
+  return {letter:shape.letter,name:NN[shape.natural],shift,frets:shape.frets.map(f=>f===null?null:f+shift),roles:shape.roles};
 }
 
 /* ================= ESTADO ================= */
@@ -1971,7 +2007,7 @@ function renderSavedLicks(){
     el.querySelector('[data-act="del"]').onclick=()=>{if(window.confirm("¿Borrar este lick guardado?"))deleteLick(id);};
   });
 }
-/* ================= RENDER: CAGED ================= */
+/* ================= UTILIDADES CAGED (detección de cejilla) ================= */
 /* Una cejilla es, estructuralmente, 2+ cuerdas contiguas pisadas en el mismo traste por un solo dedo.
    Se detecta directamente de los trastes de la forma, no hace falta anotarlo a mano. */
 function detectBarreGroups(frets){
@@ -2006,6 +2042,110 @@ function cagedBoxHTML(sh){
   const title=`Forma de ${sh.name} (${sh.letter}) · ${posTxt}`;
   return miniFretboardHTML(title,win,rows,false,barreGroups);
 }
+/* ================= IDENTIFICAR ACORDE ================= */
+let finderNotes=[]; // {s,f}
+const CHORD_TEMPLATES=[
+ {q:"maj",iv:[0,4,7],name:"Mayor"},
+ {q:"min",iv:[0,3,7],name:"menor"},
+ {q:"dim",iv:[0,3,6],name:"disminuido"},
+ {q:"aug",iv:[0,4,8],name:"aumentado"},
+ {q:"sus2",iv:[0,2,7],name:"sus2"},
+ {q:"sus4",iv:[0,5,7],name:"sus4"},
+ {q:"maj7",iv:[0,4,7,11],name:"Maj7"},
+ {q:"7",iv:[0,4,7,10],name:"7 (dominante)"},
+ {q:"m7",iv:[0,3,7,10],name:"m7"},
+ {q:"m7b5",iv:[0,3,6,10],name:"m7♭5 (semidisminuido)"},
+ {q:"dim7",iv:[0,3,6,9],name:"dim7"},
+ {q:"mMaj7",iv:[0,3,7,11],name:"m(Maj7)"}
+];
+/* Identifica probando cada nota presente como posible fundamental, y comparando el conjunto de
+   intervalos resultante contra las plantillas conocidas — el orden en que se tocaron no importa aquí,
+   solo qué notas hay (la inversión se decide aparte, mirando cuál es la más grave). */
+function identifyChord(pcsSet){
+  if(pcsSet.length<3)return null;
+  for(const rootPc of pcsSet){
+    const rel=pcsSet.map(p=>(p-rootPc+12)%12).sort((a,b)=>a-b);
+    for(const tpl of CHORD_TEMPLATES){
+      const tplSorted=tpl.iv.slice().sort((a,b)=>a-b);
+      if(rel.length===tplSorted.length&&rel.every((v,i)=>v===tplSorted[i]))return{root:rootPc,template:tpl};
+    }
+  }
+  return null;
+}
+function finderInversionLabel(root,bassPc,tplIv){
+  const rel=(bassPc-root+12)%12;
+  const idx=tplIv.indexOf(rel);
+  const names=["Fundamental (posición raíz)","1ª inversión","2ª inversión","3ª inversión"];
+  return idx>=0?names[idx]:"bajo fuera del acorde (nota añadida)";
+}
+function toggleFinderNote(s,f){
+  const idx=finderNotes.findIndex(n=>n.s===s);
+  if(idx>=0&&finderNotes[idx].f===f)finderNotes.splice(idx,1);
+  else if(idx>=0)finderNotes[idx].f=f;
+  else finderNotes.push({s,f});
+  renderFinder();
+  try{
+    const midis=finderNotes.map(n=>OPEN[n.s]+n.f);
+    if(midis.length)strum(midis);
+  }catch(e){console.warn("Audio no disponible:",e);}
+}
+function renderFinder(){
+  const notes=finderNotes.map(n=>({...n,pc:(OPEN[n.s]+n.f)%12,midi:OPEN[n.s]+n.f})).sort((a,b)=>a.midi-b.midi);
+  const uniquePcs=[...new Set(notes.map(n=>n.pc))];
+  const result=identifyChord(uniquePcs);
+  const roleColor={0:"#C9A227",1:"#4FA8A0",2:"#E4C766",3:"#9C6FB8"};
+
+  const el=document.getElementById("fbFinder");const geo=fbBase(el);
+  const maxFret=12;
+  for(let s=0;s<OPEN.length;s++){
+    for(let f=0;f<=maxFret;f++){
+      const sel=finderNotes.find(n=>n.s===s&&n.f===f);
+      if(sel){
+        const pc=(OPEN[s]+f)%12;
+        let label=showNames?NN[pc].replace("#","♯"):"?",color="#C9A227",isRoot=false;
+        if(result){
+          const rel=(pc-result.root+12)%12;
+          const idx=result.template.iv.indexOf(rel);
+          if(idx>=0){
+            color=roleColor[idx];isRoot=idx===0;
+            if(!showNames)label=["R","3","5","7"][idx];
+          }
+        }
+        addDot(el,geo,s,f,label,color,isRoot,false,()=>toggleFinderNote(s,f));
+      } else {
+        const d=document.createElement("div");d.className="dot empty-slot";
+        d.style.left=geo.nx(f)+"px";d.style.top=geo.sy(geo.rowOf(s))+"px";
+        d.onclick=()=>toggleFinderNote(s,f);
+        el.appendChild(d);
+      }
+    }
+  }
+
+  const resEl=document.getElementById("finderResult");
+  if(!notes.length){resEl.innerHTML="Toca notas en el mástil de arriba para identificar el acorde.";return;}
+  if(notes.length===1){resEl.innerHTML=`Una sola nota: <b>${NN[notes[0].pc].replace("#","♯")}</b> — hacen falta al menos 3 para formar un acorde.`;return;}
+  if(uniquePcs.length===2){
+    const iv=(uniquePcs[1]-uniquePcs[0]+12)%12;
+    resEl.innerHTML=`Dos notas: <b>${NN[uniquePcs[0]].replace("#","♯")}</b> y <b>${NN[uniquePcs[1]].replace("#","♯")}</b> — intervalo de ${IV_ABR[iv]} (${INTERVALS.find(x=>x.s===iv).n.toLowerCase()}). No es un acorde completo.`;
+    return;
+  }
+  if(!result){
+    resEl.innerHTML=`No coincide con ningún acorde estándar. Notas presentes: ${uniquePcs.map(p=>NN[p].replace("#","♯")).join(", ")}.`;
+    return;
+  }
+  const bassPc=notes[0].pc;
+  const inv=finderInversionLabel(result.root,bassPc,result.template.iv);
+  const rootName=NN[result.root].replace("#","♯");
+  const roleNames=["Fundamental","3ª","5ª","7ª"];
+  const noteRoles=notes.map(n=>{
+    const rel=(n.pc-result.root+12)%12;const idx=result.template.iv.indexOf(rel);
+    return `${NN[n.pc].replace("#","♯")} (${idx>=0?roleNames[idx]:"nota añadida, "+IV_ABR[rel]})`;
+  });
+  resEl.innerHTML=`<h3 style="margin:6px 0">${rootName} ${result.template.name}</h3>
+    <p><b>${inv}</b>${inv.startsWith("Fundamental")?"":` — bajo: <b>${NN[bassPc].replace("#","♯")}</b>`}</p>
+    <p class="muted" style="font-size:13px">Notas: ${noteRoles.join(" · ")}</p>`;
+}
+/* ================= RENDER: CAGED ================= */
 function renderCaged(){
   const qualLabel=cagedQual==="min"?"menor":"Mayor";
   document.getElementById("cagedTitle").textContent=`El sistema CAGED — acorde de ${NN[root]} ${qualLabel}`;
@@ -2169,7 +2309,7 @@ function renderCondGated(tabId,renderFn,tabLabel,explain,cond,gateClass){
   }
 }
 function renderAll(){
-  ["intervalos","escala","modos","circulo","armonia","septimas","cuartas","triadas","arpegios","licks","caged","practica","ayuda"].forEach(t=>document.getElementById("tab-"+t).hidden=(t!==tab));
+  ["intervalos","escala","modos","circulo","armonia","septimas","cuartas","triadas","arpegios","licks","caged","finder","practica","ayuda"].forEach(t=>document.getElementById("tab-"+t).hidden=(t!==tab));
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));
   syncTopSelect();
   if(tab==="intervalos"){renderIntervals();renderIvFb();renderIntervalInversion();}
@@ -2183,6 +2323,7 @@ function renderAll(){
   if(tab==="arpegios")renderModoGated("arpegios",renderArpeggios,"Arpegios","Los arpegios aquí son los de las triadas armonizadas grado a grado, igual que en Triadas.");
   if(tab==="licks")renderLicksTab();
   if(tab==="caged")renderCondGated("caged",renderCaged,"CAGED","Las 5 formas de acorde abierto (C-A-G-E-D) son una tradición específica de la guitarra de 6 cuerdas con afinación estándar. No existe un equivalente directo en "+INSTRUMENTS[instrumentKey].name.toLowerCase()+" — cambia a Guitarra arriba para usar esta pestaña.",()=>INSTRUMENTS[instrumentKey].hasCaged,"instrument-gate");
+  if(tab==="finder")renderFinder();
   if(tab==="practica")renderQuiz();
 }
 function setInstrument(key){
@@ -2198,11 +2339,22 @@ function setInstrument(key){
   cycleHistory=[];cycleIdx=0;
   renderAll();
 }
+function setNoteSystem(sys){
+  noteSystem=sys;
+  NN=(sys==="en"?NN_EN:NN_LATIN).slice();
+  const sr=document.getElementById("selRoot");
+  const cur=sr.value;
+  sr.innerHTML="";
+  NN.forEach((n,i)=>sr.add(new Option(n,i)));
+  sr.value=cur;
+  renderAll();
+}
 rebuildStringSets();
 const si2=document.getElementById("selInstrument");
 Object.keys(INSTRUMENTS).forEach(k=>si2.add(new Option(INSTRUMENTS[k].name,k)));
 si2.value=instrumentKey;
 si2.onchange=e=>setInstrument(e.target.value);
+document.getElementById("selNoteSystem").onchange=e=>setNoteSystem(e.target.value);
 const sr=document.getElementById("selRoot");NN.forEach((n,i)=>sr.add(new Option(n,i)));
 sr.onchange=e=>{root=+e.target.value;renderAll();};
 const sm=document.getElementById("selMode");
@@ -2285,6 +2437,7 @@ document.getElementById("selLickTempo").onchange=e=>{lickTempo=+e.target.value;}
 document.getElementById("btnLickGen").onclick=generateLick;
 document.getElementById("btnLickPlay").onclick=()=>{try{playLick();}catch(e){console.warn("Audio no disponible:",e);}};
 document.getElementById("btnLickSave").onclick=saveLick;
+document.getElementById("btnFinderReset").onclick=()=>{finderNotes=[];renderFinder();};
 function playKeySound(sel){
   const iv=sel.kind==="minor"?[0,3,7]:[0,4,7];
   const pcs=iv.map(x=>(sel.pc+x)%12);
