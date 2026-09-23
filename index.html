@@ -2256,7 +2256,7 @@ function randomChordShape(){
     const startStr=Math.floor(Math.random()*(OPEN.length-n+1));
     const strs=Array.from({length:n},(_,i)=>startStr+i);
     const pcsOrdered=tpl.iv.map(x=>(root+x)%12);
-    const fr=findShapeN(strs,pcsOrdered,5,0);
+    const fr=findShapeN(strs,pcsOrdered,4,0); // 4 trastes máx. de estiramiento — lo que da una mano
     if(fr)return{root,template:tpl,strs,frets:fr};
   }
   return null;
