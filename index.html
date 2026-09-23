@@ -2045,32 +2045,91 @@ function cagedBoxHTML(sh){
 /* ================= IDENTIFICAR ACORDE ================= */
 let finderNotes=[]; // {s,f}
 const CHORD_TEMPLATES=[
- {q:"maj",iv:[0,4,7],name:"Mayor"},
- {q:"min",iv:[0,3,7],name:"menor"},
- {q:"dim",iv:[0,3,6],name:"disminuido"},
- {q:"aug",iv:[0,4,8],name:"aumentado"},
- {q:"sus2",iv:[0,2,7],name:"sus2"},
- {q:"sus4",iv:[0,5,7],name:"sus4"},
- {q:"maj7",iv:[0,4,7,11],name:"Maj7"},
- {q:"7",iv:[0,4,7,10],name:"7 (dominante)"},
- {q:"m7",iv:[0,3,7,10],name:"m7"},
- {q:"m7b5",iv:[0,3,6,10],name:"m7♭5 (semidisminuido)"},
- {q:"dim7",iv:[0,3,6,9],name:"dim7"},
- {q:"mMaj7",iv:[0,3,7,11],name:"m(Maj7)"}
+ // triadas
+ {q:"maj",iv:[0,4,7],req:4,name:"Mayor"},
+ {q:"min",iv:[0,3,7],req:3,name:"menor"},
+ {q:"dim",iv:[0,3,6],req:3,name:"disminuido"},
+ {q:"aug",iv:[0,4,8],req:4,name:"aumentado"},
+ {q:"sus2",iv:[0,2,7],req:2,name:"sus2"},
+ {q:"sus4",iv:[0,5,7],req:5,name:"sus4"},
+ // sextas
+ {q:"6",iv:[0,4,7,9],req:4,name:"6"},
+ {q:"m6",iv:[0,3,7,9],req:3,name:"m6"},
+ // séptimas
+ {q:"maj7",iv:[0,4,7,11],req:4,name:"Maj7"},
+ {q:"7",iv:[0,4,7,10],req:4,name:"7 (dominante)"},
+ {q:"m7",iv:[0,3,7,10],req:3,name:"m7"},
+ {q:"m7b5",iv:[0,3,6,10],req:3,name:"m7♭5 (semidisminuido)"},
+ {q:"dim7",iv:[0,3,6,9],req:3,name:"dim7"},
+ {q:"mMaj7",iv:[0,3,7,11],req:3,name:"m(Maj7)"},
+ {q:"augMaj7",iv:[0,4,8,11],req:4,name:"aumentado Maj7"},
+ {q:"7#5",iv:[0,4,8,10],req:4,name:"7♯5"},
+ {q:"7b5",iv:[0,4,6,10],req:4,name:"7♭5"},
+ // sus con 7ª
+ {q:"7sus4",iv:[0,5,7,10],req:5,name:"7sus4"},
+ {q:"7sus2",iv:[0,2,7,10],req:2,name:"7sus2"},
+ // notas añadidas (sin 7ª)
+ {q:"add9",iv:[0,2,4,7],req:4,name:"(add9)"},
+ {q:"madd9",iv:[0,2,3,7],req:3,name:"m(add9)"},
+ {q:"add11",iv:[0,4,5,7],req:4,name:"(add11)"},
+ {q:"madd11",iv:[0,3,5,7],req:3,name:"m(add11)"},
+ {q:"6/9",iv:[0,2,4,7,9],req:4,name:"6/9"},
+ {q:"m6/9",iv:[0,2,3,7,9],req:3,name:"m6/9"},
+ // novenas
+ {q:"9",iv:[0,2,4,7,10],req:4,name:"9"},
+ {q:"maj9",iv:[0,2,4,7,11],req:4,name:"Maj9"},
+ {q:"m9",iv:[0,2,3,7,10],req:3,name:"m9"},
+ {q:"mMaj9",iv:[0,2,3,7,11],req:3,name:"m(Maj9)"},
+ {q:"7b9",iv:[0,1,4,7,10],req:4,name:"7♭9"},
+ {q:"7#9",iv:[0,3,4,7,10],req:4,name:"7♯9"},
+ // oncenas
+ {q:"11",iv:[0,2,4,5,7,10],req:5,name:"11"},
+ {q:"m11",iv:[0,2,3,5,7,10],req:3,name:"m11"},
+ {q:"maj11",iv:[0,2,4,5,7,11],req:4,name:"Maj11"},
+ // trecenas
+ {q:"13",iv:[0,2,4,7,9,10],req:4,name:"13"},
+ {q:"maj13",iv:[0,2,4,7,9,11],req:4,name:"Maj13"},
+ {q:"m13",iv:[0,2,3,7,9,10],req:3,name:"m13"}
 ];
-/* Identifica probando cada nota presente como posible fundamental, y comparando el conjunto de
-   intervalos resultante contra las plantillas conocidas — el orden en que se tocaron no importa aquí,
-   solo qué notas hay (la inversión se decide aparte, mirando cuál es la más grave). */
-function identifyChord(pcsSet){
-  if(pcsSet.length<3)return null;
+/* Nombre de una tensión suelta (nota que sobra respecto a la plantilla base), usado cuando la
+   digitación no es "de libro" pero sí forma algo reconocible. */
+const EXT_ABR={1:"♭9",2:"9",3:"♯9",5:"11",6:"♯11",8:"♭13",9:"13",10:"♭7",11:"7ª"};
+/* Nombre "de libro" de cada semitono cuando SÍ es una de las notas propias de la plantilla — por
+   semitono real, no por posición dentro de tpl.iv (una plantilla como add9 = [0,2,4,7] tiene la 9ª
+   antes que la 3ª, así que indexar por posición etiquetaría mal las notas). */
+const CORE_NAME={0:"Fundamental",1:"♭9ª",2:"9ª",3:"3ª",4:"3ª",5:"4ª",6:"5ª",7:"5ª",8:"5ª",9:"6ª",10:"7ª",11:"7ª"};
+const CORE_SHORT={0:"R",1:"♭9",2:"9",3:"3",4:"3",5:"4",6:"5",7:"5",8:"5",9:"6",10:"7",11:"7"};
+const CORE_COLOR={0:"#C9A227",1:"#7BC8C1",2:"#7BC8C1",3:"#4FA8A0",4:"#4FA8A0",5:"#7BC8C1",6:"#E4C766",7:"#E4C766",8:"#E4C766",9:"#E4C766",10:"#9C6FB8",11:"#9C6FB8"};
+/* Identifica el acorde probando cada nota presente como posible fundamental y comparando el conjunto
+   de intervalos resultante contra las plantillas conocidas. Ya no exige una coincidencia exacta: una
+   plantilla que sea subconjunto de las notas tocadas (sobran notas → "añadidas") o superconjunto
+   (falta alguna, normalmente la 5ª, → "omitida") también cuenta, con menos puntuación. Así, una
+   digitación poco ortodoxa pero real —no todas suenan bien, pero todas forman algo— consigue un
+   nombre en vez de un simple "?". Devuelve los candidatos ordenados de mejor a peor ajuste.*/
+function identifyChordCandidates(pcsSet){
+  if(pcsSet.length<3)return[];
+  const seen=new Map();
   for(const rootPc of pcsSet){
     const rel=pcsSet.map(p=>(p-rootPc+12)%12).sort((a,b)=>a-b);
+    const relSet=new Set(rel);
     for(const tpl of CHORD_TEMPLATES){
-      const tplSorted=tpl.iv.slice().sort((a,b)=>a-b);
-      if(rel.length===tplSorted.length&&rel.every((v,i)=>v===tplSorted[i]))return{root:rootPc,template:tpl};
+      const missing=tpl.iv.filter(x=>!relSet.has(x));
+      const extra=rel.filter(x=>!tpl.iv.includes(x));
+      if(missing.length>1||extra.length>2)continue; // como mucho 1 nota omitida y 2 añadidas
+      if(missing.includes(tpl.req))continue; // la nota que define la calidad del acorde no puede faltar
+      const score=100-missing.length*10-extra.length*6;
+      const key=rootPc+"|"+tpl.q;
+      const prev=seen.get(key);
+      if(!prev||score>prev.score)seen.set(key,{root:rootPc,template:tpl,missing,extra,score});
     }
   }
-  return null;
+  return[...seen.values()].sort((a,b)=>b.score-a.score);
+}
+function candidateLabel(c){
+  let lbl=c.template.name;
+  if(c.extra.length)lbl+=" + "+c.extra.map(x=>EXT_ABR[x]||IV_ABR[x]).join(", ");
+  if(c.missing.length)lbl+=" (sin "+c.missing.map(x=>IV_ABR[x]).join(", ")+")";
+  return lbl;
 }
 function finderInversionLabel(root,bassPc,tplIv){
   const rel=(bassPc-root+12)%12;
@@ -2092,8 +2151,9 @@ function toggleFinderNote(s,f){
 function renderFinder(){
   const notes=finderNotes.map(n=>({...n,pc:(OPEN[n.s]+n.f)%12,midi:OPEN[n.s]+n.f})).sort((a,b)=>a.midi-b.midi);
   const uniquePcs=[...new Set(notes.map(n=>n.pc))];
-  const result=identifyChord(uniquePcs);
-  const roleColor={0:"#C9A227",1:"#4FA8A0",2:"#E4C766",3:"#9C6FB8"};
+  const candidates=identifyChordCandidates(uniquePcs);
+  const result=candidates[0]||null;
+  const EXTRA_COLOR="#C1584B";
 
   const el=document.getElementById("fbFinder");const geo=fbBase(el);
   const maxFret=12;
@@ -2105,10 +2165,12 @@ function renderFinder(){
         let label=showNames?NN[pc].replace("#","♯"):"?",color="#C9A227",isRoot=false;
         if(result){
           const rel=(pc-result.root+12)%12;
-          const idx=result.template.iv.indexOf(rel);
-          if(idx>=0){
-            color=roleColor[idx];isRoot=idx===0;
-            if(!showNames)label=["R","3","5","7"][idx];
+          if(result.template.iv.includes(rel)){
+            color=CORE_COLOR[rel]||"#C9A227";isRoot=rel===0;
+            if(!showNames)label=CORE_SHORT[rel]||IV_ABR[rel];
+          } else {
+            color=EXTRA_COLOR;
+            if(!showNames)label=EXT_ABR[rel]||IV_ABR[rel];
           }
         }
         addDot(el,geo,s,f,label,color,isRoot,false,()=>toggleFinderNote(s,f));
@@ -2130,20 +2192,24 @@ function renderFinder(){
     return;
   }
   if(!result){
-    resEl.innerHTML=`No coincide con ningún acorde estándar. Notas presentes: ${uniquePcs.map(p=>NN[p].replace("#","♯")).join(", ")}.`;
+    resEl.innerHTML=`No encaja ni de forma aproximada con ningún acorde reconocible. Notas presentes: ${uniquePcs.map(p=>NN[p].replace("#","♯")).join(", ")}.`;
     return;
   }
   const bassPc=notes[0].pc;
   const inv=finderInversionLabel(result.root,bassPc,result.template.iv);
   const rootName=NN[result.root].replace("#","♯");
-  const roleNames=["Fundamental","3ª","5ª","7ª"];
   const noteRoles=notes.map(n=>{
-    const rel=(n.pc-result.root+12)%12;const idx=result.template.iv.indexOf(rel);
-    return `${NN[n.pc].replace("#","♯")} (${idx>=0?roleNames[idx]:"nota añadida, "+IV_ABR[rel]})`;
+    const rel=(n.pc-result.root+12)%12;
+    if(result.template.iv.includes(rel))return `${NN[n.pc].replace("#","♯")} (${CORE_NAME[rel]||IV_ABR[rel]})`;
+    return `${NN[n.pc].replace("#","♯")} (nota añadida, ${EXT_ABR[rel]||IV_ABR[rel]})`;
   });
-  resEl.innerHTML=`<h3 style="margin:6px 0">${rootName} ${result.template.name}</h3>
+  const notaBookless=result.score<100?`<p class="hint">💡 No es una digitación "de libro"${result.missing.length?` (falta la ${result.missing.map(x=>IV_ABR[x]).join(", ")})`:""}${result.extra.length?` (tiene nota${result.extra.length>1?"s":""} añadida${result.extra.length>1?"s":""}: ${result.extra.map(x=>EXT_ABR[x]||IV_ABR[x]).join(", ")})`:""}, pero las notas presentes sí forman este acorde.</p>`:"";
+  const alts=candidates.slice(1,4).filter(c=>c.score>=result.score-20);
+  const altsHtml=alts.length?`<p class="muted" style="font-size:13px;margin-top:10px"><b>Posibles denominaciones de acorde:</b><br>${alts.map(c=>`${NN[c.root].replace("#","♯")} ${candidateLabel(c)}`).join("<br>")}</p>`:"";
+  resEl.innerHTML=`<h3 style="margin:6px 0">${rootName} ${candidateLabel(result)}</h3>
     <p><b>${inv}</b>${inv.startsWith("Fundamental")?"":` — bajo: <b>${NN[bassPc].replace("#","♯")}</b>`}</p>
-    <p class="muted" style="font-size:13px">Notas: ${noteRoles.join(" · ")}</p>`;
+    <p class="muted" style="font-size:13px">Notas: ${noteRoles.join(" · ")}</p>
+    ${notaBookless}${altsHtml}`;
 }
 /* ================= RENDER: CAGED ================= */
 function renderCaged(){
