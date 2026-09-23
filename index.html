@@ -564,6 +564,7 @@ tr.row-btn:hover td{background:var(--surface2)}
           <button data-v="calidad">Mayor / menor / dim</button>
           <button data-v="intervalo">Intervalos</button>
           <button data-v="nota">¿Qué nota es? 👁</button>
+          <button data-v="acorde">Identifica el acorde 🎸</button>
         </div>
         <span class="pill" id="quizScore">Aciertos: 0/0</span>
         <span class="pill" id="trophyBadge" title="Logros desbloqueados">🏆 0/8</span>
@@ -765,7 +766,7 @@ const TROPHIES=[
  {id:"streak20",icon:"⚡",name:"Solo interminable",text:"20 aciertos seguidos — estás on fire.",check:()=>qStreak>=20},
  {id:"total25",icon:"💿",name:"Disco de oro",text:"25 respuestas correctas acumuladas.",check:()=>qc>=25},
  {id:"total50",icon:"🏆",name:"Leyenda del mástil",text:"50 aciertos. Ya te sabes el diapasón de memoria.",check:()=>qc>=50},
- {id:"allTypes",icon:"🎓",name:"Todólogo del diapasón",text:"Has probado los 4 modos de práctica.",check:()=>typesUsed.size>=4},
+ {id:"allTypes",icon:"🎓",name:"Todólogo del diapasón",text:"Has probado los 5 modos de práctica.",check:()=>typesUsed.size>=5},
  {id:"crackedString",icon:"💥",name:"Cuerda rota",text:"Hasta los grandes rompen una cuerda de vez en cuando.",check:()=>(qt-qc)>=1}
 ];
 /* Riff sintetizado con el motor Karplus-Strong ya existente: golpe de power chord, lick pentatónico rápido, acorde final */
@@ -2243,17 +2244,59 @@ function renderCaged(){
   };
 }
 /* ================= QUIZ ================= */
+/* Busca una digitación real para un acorde random: N cuerdas consecutivas (elegidas al azar dentro
+   del mástil) reciben, en orden ascendente, las notas de la plantilla (fundamental en la cuerda más
+   grave). Se reintenta con otro acorde/ventana de cuerdas si no cabe cómodamente. */
+function randomChordShape(){
+  for(let attempt=0;attempt<40;attempt++){
+    const root=Math.floor(Math.random()*12);
+    const tpl=CHORD_TEMPLATES[Math.floor(Math.random()*CHORD_TEMPLATES.length)];
+    const n=tpl.iv.length;
+    if(n>OPEN.length)continue;
+    const startStr=Math.floor(Math.random()*(OPEN.length-n+1));
+    const strs=Array.from({length:n},(_,i)=>startStr+i);
+    const pcsOrdered=tpl.iv.map(x=>(root+x)%12);
+    const fr=findShapeN(strs,pcsOrdered,5,0);
+    if(fr)return{root,template:tpl,strs,frets:fr};
+  }
+  return null;
+}
+function randomChordLabel(excludeKeys){
+  let root,tpl,key;
+  do{
+    root=Math.floor(Math.random()*12);
+    tpl=CHORD_TEMPLATES[Math.floor(Math.random()*CHORD_TEMPLATES.length)];
+    key=root+"|"+tpl.q;
+  }while(excludeKeys.has(key));
+  return{root,tpl,key};
+}
 const QMETA={
   grado:{prompt:"Escucha la triada y di sobre qué grado de la escala/modo actual está construida.",opts:()=>ROM.map((r,i)=>({l:String(i+1),v:i}))},
   calidad:{prompt:"Escucha la triada suelta: ¿es mayor, menor o disminuida?",opts:()=>[{l:"Mayor",v:"maj"},{l:"menor",v:"min"},{l:"dim",v:"dim"}]},
   intervalo:{prompt:"Escucha dos notas: ¿qué intervalo forman? (empieza por 3ªm, 3ªM, 4ªJ, 5ªJ, 8ª y amplía)",opts:()=>INTERVALS.filter(i=>i.s>0).map(i=>({l:i.n,v:i.s}))},
-  nota:{prompt:"Mira el punto dorado en el mástil: ¿qué nota es? (pulsa ▶ si quieres pista sonora)",opts:()=>NN.map((n,i)=>({l:n,v:i}))}
+  nota:{prompt:"Mira el punto dorado en el mástil: ¿qué nota es? (pulsa ▶ si quieres pista sonora)",opts:()=>NN.map((n,i)=>({l:n,v:i}))},
+  acorde:{prompt:"Se marca un acorde random en el mástil (cualquier tipo: mayor, menor, con 7ª, add9, sus, novenas...). Escúchalo o mira la digitación y di cuál es.",opts:()=>quizPayload&&quizPayload.options||[]}
 };
 function quizNew(){
   quizSel=null;
   if(quizType==="grado"){let d;do{d=Math.floor(Math.random()*7);}while(quizPayload&&quizPayload.d!==undefined&&d===quizPayload.d);quizPayload={d};quizAns=d;}
   else if(quizType==="calidad"){const rootPc=Math.floor(Math.random()*12);const kinds=[["maj",[0,4,7]],["min",[0,3,7]],["dim",[0,3,6]]];const k=kinds[Math.floor(Math.random()*3)];quizPayload={m:k[1].map(x=>52+rootPc+x)};quizAns=k[0];}
   else if(quizType==="intervalo"){const s=INTERVALS[1+Math.floor(Math.random()*(INTERVALS.length-1))].s;const base=50+Math.floor(Math.random()*10);quizPayload={m:[base,base+s]};quizAns=s;}
+  else if(quizType==="acorde"){
+    const picked=randomChordShape()||{root:0,template:CHORD_TEMPLATES[0],strs:[0,1,2],frets:findShapeN([0,1,2],CHORD_TEMPLATES[0].iv,5,0)};
+    const key=picked.root+"|"+picked.template.q;
+    quizPayload={root:picked.root,template:picked.template,strs:picked.strs,frets:picked.frets};
+    quizAns=key;
+    const usedKeys=new Set([key]);
+    const opts=[{l:`${NN[picked.root].replace("#","♯")} ${picked.template.name}`,v:key}];
+    while(opts.length<4){
+      const d=randomChordLabel(usedKeys);
+      usedKeys.add(d.key);
+      opts.push({l:`${NN[d.root].replace("#","♯")} ${d.tpl.name}`,v:d.key});
+    }
+    for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+    quizPayload.options=opts;
+  }
   else{const s=Math.floor(Math.random()*OPEN.length),f=Math.floor(Math.random()*13);quizPayload={s,f};quizAns=(OPEN[s]+f)%12;}
   renderQuiz();
 }
@@ -2261,6 +2304,7 @@ function quizPlay(){
   if(quizType==="grado"){const sh=shapeFor(quizPayload.d,ssIdx,invIdx);if(sh)strum(shapeMidis(sh));}
   else if(quizType==="calidad")strum(quizPayload.m);
   else if(quizType==="intervalo")arp(quizPayload.m,.5,.9);
+  else if(quizType==="acorde"){const midis=quizPayload.strs.map((s,i)=>OPEN[s]+quizPayload.frets[i]);strum(midis);}
   else pluck(OPEN[quizPayload.s]+quizPayload.f,ctx().currentTime);
 }
 function buildGradoBox(deg,label){
@@ -2293,6 +2337,26 @@ function renderQuizFb(){
   const revealed=quizSel!==null;
   addDot(el,geo,quizPayload.s,quizPayload.f,revealed?NN[quizAns].replace("#","♯"):"?","#C9A227",true,false,()=>pluck(OPEN[quizPayload.s]+quizPayload.f,ctx().currentTime));
 }
+function renderQuizChordFb(){
+  const el=document.getElementById("fbQuiz");const geo=fbBase(el);
+  const revealed=quizSel!==null;
+  const{root,template,strs,frets}=quizPayload;
+  strs.forEach((s,i)=>{
+    const f=frets[i];const pc=(OPEN[s]+f)%12;
+    let label="?",color="#C9A227",isRoot=false;
+    if(revealed){
+      const rel=(pc-root+12)%12;
+      if(template.iv.includes(rel)){
+        color=CORE_COLOR[rel]||"#C9A227";isRoot=rel===0;
+        label=showNames?NN[pc].replace("#","♯"):(CORE_SHORT[rel]||IV_ABR[rel]);
+      } else {
+        color="#C1584B";
+        label=showNames?NN[pc].replace("#","♯"):(EXT_ABR[rel]||IV_ABR[rel]);
+      }
+    }
+    addDot(el,geo,s,f,label,color,isRoot,false,()=>pluck(OPEN[s]+f,ctx().currentTime));
+  });
+}
 function renderQuiz(){
   const gradeBtn=document.querySelector('#segQuiz button[data-v="grado"]');
   gradeBtn.disabled=scaleKind!=="modo";
@@ -2305,8 +2369,9 @@ function renderQuiz(){
   document.getElementById("quizPrompt").textContent=QMETA[quizType].prompt;
   document.getElementById("quizScore").textContent=`Aciertos: ${qc}/${qt}`;
   const wrap=document.getElementById("quizFbWrap");
-  wrap.hidden=quizType!=="nota";
+  wrap.hidden=quizType!=="nota"&&quizType!=="acorde";
   if(quizType==="nota")renderQuizFb();
+  else if(quizType==="acorde")renderQuizChordFb();
   const bx=document.getElementById("quizBtns");bx.innerHTML="";
   QMETA[quizType].opts().forEach(o=>{
     const b=document.createElement("button");b.textContent=o.l;
@@ -2325,6 +2390,7 @@ function renderQuiz(){
     if(quizType==="grado")ansTxt=`${romanFor(quizAns)} (${QL[triadQual(quizAns)]}) — ${triadPCs(quizAns).map(p=>NN[p]).join("-")}`;
     else if(quizType==="calidad")ansTxt=QL[quizAns];
     else if(quizType==="intervalo")ansTxt=INTERVALS.find(i=>i.s===quizAns).n;
+    else if(quizType==="acorde")ansTxt=`${NN[quizPayload.root].replace("#","♯")} ${quizPayload.template.name}`;
     else ansTxt=`${NN[quizAns]} (cuerda ${OPEN.length-quizPayload.s}ª, traste ${quizPayload.f})`;
     fb.innerHTML=`<span style="color:${ok?"var(--teal)":"var(--red)"}">${ok?"✓ Correcto":"✗ No"} — era <b>${ansTxt}</b></span>`;
 
