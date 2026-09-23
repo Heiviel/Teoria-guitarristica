@@ -2166,7 +2166,7 @@ function renderFinder(){
       const sel=finderNotes.find(n=>n.s===s&&n.f===f);
       if(sel){
         const pc=(OPEN[s]+f)%12;
-        let label=showNames?NN[pc].replace("#","♯"):"?",color="#C9A227",isRoot=false;
+        let label=NN[pc].replace("#","♯"),color="#C9A227",isRoot=false;
         if(result){
           const rel=(pc-result.root+12)%12;
           if(result.template.iv.includes(rel)){
