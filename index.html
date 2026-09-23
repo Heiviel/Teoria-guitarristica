@@ -698,6 +698,11 @@ tr.row-btn:hover td{background:var(--surface2)}
 </div>
 
 <script>
+/* Sin esto, Safari en iOS/iPadOS (dedo o Apple Pencil) necesita un primer toque para
+   "activar" cualquier elemento con :hover y un segundo toque para que el clic real
+   se dispare. Un listener vacío de touchstart hace que trate los toques como clic
+   inmediato en toda la página. */
+document.addEventListener("touchstart",function(){},{passive:true});
 /* ================= DATOS ================= */
 const NN_LATIN=["Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"];
 const NN_EN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
