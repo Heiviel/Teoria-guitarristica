@@ -585,6 +585,8 @@ tr.row-btn:hover td{background:var(--surface2)}
       <p>Marca notas en el mástil (una por cuerda, como al tocar de verdad) y te digo qué acorde es — tónica, calidad, y si es la posición fundamental o qué inversión, mirando cuál es la nota más grave.</p>
       <div class="controls">
         <button class="btn" id="btnFinderReset">↺ Borrar todo</button>
+        <button class="btn-gold" id="btnFinderStrum" disabled>▶ Rasgueo</button>
+        <button class="btn" id="btnFinderArp" disabled>▶ Arpegio</button>
       </div>
       <div class="fb-scroll"><div class="fretboard" id="fbFinder"></div></div>
       <div class="legend">
@@ -2149,6 +2151,8 @@ function toggleFinderNote(s,f){
   }catch(e){console.warn("Audio no disponible:",e);}
 }
 function renderFinder(){
+  document.getElementById("btnFinderStrum").disabled=finderNotes.length<1;
+  document.getElementById("btnFinderArp").disabled=finderNotes.length<1;
   const notes=finderNotes.map(n=>({...n,pc:(OPEN[n.s]+n.f)%12,midi:OPEN[n.s]+n.f})).sort((a,b)=>a.midi-b.midi);
   const uniquePcs=[...new Set(notes.map(n=>n.pc))];
   const candidates=identifyChordCandidates(uniquePcs);
@@ -2504,6 +2508,14 @@ document.getElementById("btnLickGen").onclick=generateLick;
 document.getElementById("btnLickPlay").onclick=()=>{try{playLick();}catch(e){console.warn("Audio no disponible:",e);}};
 document.getElementById("btnLickSave").onclick=saveLick;
 document.getElementById("btnFinderReset").onclick=()=>{finderNotes=[];renderFinder();};
+document.getElementById("btnFinderStrum").onclick=()=>{
+  const midis=finderNotes.slice().sort((a,b)=>a.s-b.s).map(n=>OPEN[n.s]+n.f);
+  try{if(midis.length)strum(midis);}catch(e){console.warn("Audio no disponible:",e);}
+};
+document.getElementById("btnFinderArp").onclick=()=>{
+  const midis=finderNotes.slice().sort((a,b)=>a.s-b.s).map(n=>OPEN[n.s]+n.f);
+  try{if(midis.length)arp(midis);}catch(e){console.warn("Audio no disponible:",e);}
+};
 function playKeySound(sel){
   const iv=sel.kind==="minor"?[0,3,7]:[0,4,7];
   const pcs=iv.map(x=>(sel.pc+x)%12);
