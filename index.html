@@ -69,6 +69,8 @@ tr.row-btn:hover td{background:var(--surface2)}
 .mini-fb .mdot.note-char{animation:charPulseSm 1.6s ease-in-out infinite}
 @keyframes charPulse{0%,100%{box-shadow:0 0 0 0 rgba(228,100,60,.7)}50%{box-shadow:0 0 0 6px rgba(228,100,60,0)}}
 @keyframes charPulseSm{0%,100%{box-shadow:0 0 0 0 rgba(228,100,60,.7)}50%{box-shadow:0 0 0 4px rgba(228,100,60,0)}}
+.help-jump{cursor:pointer;transition:color .15s ease}
+.help-jump:hover{color:var(--brass-soft);text-decoration:underline}
 .eder-letter{cursor:pointer;display:inline-block;transition:transform .18s ease,color .18s ease;user-select:none}
 .eder-letter:hover{animation:ederWiggle .5s ease}
 .eder-letter:active{transform:scale(.88) translateY(2px)}
@@ -154,9 +156,15 @@ tr.row-btn:hover td{background:var(--surface2)}
 .cof-main-layout{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:18px;align-items:start;margin-bottom:18px}
 @media(max-width:820px){.cof-main-layout{grid-template-columns:1fr}}
 @media(max-width:640px){.slabel{left:-26px}}
+.tabs-toggle{display:none}
 @media(max-width:600px){
-  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-left:-28px;margin-right:-28px;padding-left:28px;padding-right:28px}
-  .tabs button{flex:0 0 auto}
+  .tabs-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:var(--surface2);color:var(--ivory);border:1px solid var(--line);border-radius:8px;padding:11px 14px;font-weight:600;font-size:14px}
+  .tabs-toggle .chevron{color:var(--teal-soft);transition:transform .2s ease}
+  .tabs-toggle[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+  .tabs{display:none;flex-direction:column;flex-wrap:nowrap;overflow-y:auto;max-height:min(55vh,420px);margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow-x:visible}
+  .tabs.expanded{display:flex}
+  .tabs button{width:100%;text-align:left;border-radius:0;border-bottom:1px solid var(--line)}
+  .tabs button:last-child{border-bottom:none}
 }
 </style>
 </head>
@@ -180,6 +188,9 @@ tr.row-btn:hover td{background:var(--surface2)}
     </select>
   </div>
 
+  <button type="button" class="tabs-toggle" id="tabsToggle" aria-expanded="false" aria-controls="tabs">
+    <span id="tabsToggleLabel">Intervalos</span><span class="chevron">▾</span>
+  </button>
   <nav class="tabs" id="tabs">
     <button data-t="intervalos" class="on">Intervalos</button>
     <button data-t="escala">Escala y grados</button>
@@ -618,43 +629,43 @@ tr.row-btn:hover td{background:var(--surface2)}
       <h2>Cómo usar la app</h2>
       <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎵 Intervalos</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('intervalos')" style="margin-top:0">🎵 Intervalos</h3>
       <p>La distancia entre dos notas. Pulsa una tarjeta para oírla y verla en el mástil. <b>"Ver todos a la vez"</b> pinta los 12 intervalos posibles desde la tónica. Abajo, la tabla de <b>inversión de intervalos</b> (qué pasa si subes la nota grave una 8ª) con diagrama y sonido.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎼 Escala y grados</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('escala')" style="margin-top:0">🎼 Escala y grados</h3>
       <p>Todas las notas de la escala/modo elegido, por todo el mástil. Filtra por grado para aislar un color. Debajo, <b>patrones/posiciones</b>: la misma escala troceada en cajas que se tocan sin mover la mano.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎨 Modos</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('modos')" style="margin-top:0">🎨 Modos</h3>
       <p>Los 7 modos de la escala mayor. Pulsa uno para activarlo en toda la app y compararlo con la mayor. La nota (o notas) que lo diferencia de la mayor pulsa con un anillo en el mástil y en los patrones — es lo que le da su sabor propio.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">⭕ Círculo de quintas</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('circulo')" style="margin-top:0">⭕ Círculo de quintas</h3>
       <p>Pulsa una tonalidad (mayor o su relativa menor) en la rueda: te da sus notas, alteraciones, vecinas, armonización rápida y dónde tocar la tónica en el mástil.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎹 Armonización</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('armonia')" style="margin-top:0">🎹 Armonización</h3>
       <p>Los 7 acordes (triadas) que salen de armonizar la escala activa, con su calidad (mayor/menor/dim). Pulsa una fila para oírla, o una progresión típica (I-IV-V, ii-V-I...). Debajo, la digitación real en el mástil de cada uno.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">7️⃣ Acordes de 7ª</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('septimas')" style="margin-top:0">7️⃣ Acordes de 7ª</h3>
       <p>Como Armonización pero con acordes de 4 notas (maj7, m7, 7, m7♭5...). Elige juego de cuerdas e inversión para ver la digitación real, o "todas las posiciones" para las 4 inversiones a la vez. Abajo, progresiones avanzadas (sustitución de tritono, turnaround) con movimiento de dedos mínimo entre acordes.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎸 Acordes por cuartas</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('cuartas')" style="margin-top:0">🎸 Acordes por cuartas</h3>
       <p>Apilar 4ªs en vez de 3ªs — sonido abierto y "flotante" (jazz modal, So What). Elige 3 o 4 notas, juego de cuerdas y posición (rota qué nota queda abajo, no es una inversión clásica). Los números 1-4 marcan el orden en la pila, no grado ni R/3/5.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🔺 Triadas e inversiones</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('triadas')" style="margin-top:0">🔺 Triadas e inversiones</h3>
       <p>Cada triada de la escala en un juego de cuerdas concreto, con sus 3 inversiones (fundamental/1ª/2ª). Marca "ver las 3 a la vez" para compararlas.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎶 Arpegios</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('arpegios')" style="margin-top:0">🎶 Arpegios</h3>
       <p>Las notas de la triada tocadas una a una (no a la vez), por todo el mástil. Incluye práctica sobre progresiones de acordes.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎲 Licks y Riffs</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('licks')" style="margin-top:0">🎲 Licks y Riffs</h3>
       <p>Genera frases originales al vuelo dentro de una caja de escala (no son riffs de canciones reales, por derechos de autor). Los números marcan el orden en que se tocan. Incluye tablatura en texto debajo del mástil.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🅰️ CAGED</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('caged')" style="margin-top:0">🅰️ CAGED</h3>
       <p>Las 5 formas de acorde abierto (C-A-G-E-D) movidas con cejilla para tocar el acorde de la tónica actual en 5 sitios distintos del mástil.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🔍 Identificar acorde</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('finder')" style="margin-top:0">🔍 Identificar acorde</h3>
       <p>Al revés que el resto de la app: aquí pones tú las notas (una por cuerda) y la app identifica qué acorde es, con calidad y si es fundamental o inversión — mirando cuál es la nota más grave que hayas puesto.</p>
     </div>
-    <div class="card"><h3 style="margin-top:0">🎯 Práctica</h3>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('practica')" style="margin-top:0">🎯 Práctica</h3>
       <p>4 modos de entrenamiento auditivo: adivina el grado, la calidad del acorde, el intervalo, o la nota en el mástil. Tras responder, ves la digitación correcta (y la tuya si fallaste) para comparar.</p>
     </div>
     <div class="card">
@@ -2468,6 +2479,9 @@ function renderCondGated(tabId,renderFn,tabLabel,explain,cond,gateClass){
 function renderAll(){
   ["intervalos","escala","modos","circulo","armonia","septimas","cuartas","triadas","arpegios","licks","caged","finder","practica","ayuda"].forEach(t=>document.getElementById("tab-"+t).hidden=(t!==tab));
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));
+  const tabsToggleLabel=document.getElementById("tabsToggleLabel");
+  const activeTabBtn=document.querySelector("#tabs button.on");
+  if(tabsToggleLabel&&activeTabBtn)tabsToggleLabel.textContent=activeTabBtn.textContent;
   syncTopSelect();
   if(tab==="intervalos"){renderIntervals();renderIvFb();renderIntervalInversion();}
   if(tab==="escala")renderScaleTab();
@@ -2528,7 +2542,14 @@ sm.onchange=e=>{const v=e.target.value;
   if(v.startsWith("mode-")){modeIdx=+v.slice(5);scaleKind="modo";}
   else{scaleKind=v.slice(5);}
   renderAll();};
-document.getElementById("tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderAll();});
+function closeTabsMenu(){document.getElementById("tabs").classList.remove("expanded");document.getElementById("tabsToggle").setAttribute("aria-expanded","false");}
+function goToTab(t){tab=t;renderAll();closeTabsMenu();window.scrollTo({top:0,behavior:"smooth"});}
+document.getElementById("tabsToggle").onclick=()=>{
+  const nav=document.getElementById("tabs");
+  const open=nav.classList.toggle("expanded");
+  document.getElementById("tabsToggle").setAttribute("aria-expanded",open?"true":"false");
+};
+document.getElementById("tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderAll();closeTabsMenu();});
 document.getElementById("btnIvAll").onclick=e=>{ivAll=!ivAll;e.target.textContent=ivAll?"Ver un solo intervalo":"Ver todos los intervalos a la vez 👁";e.target.style.outline=ivAll?"2px solid var(--brass)":"none";renderIvFb();};
 document.getElementById("btnNamesGlobal").onclick=e=>{showNames=!showNames;e.target.textContent=showNames?"Ver: Notas 🔁":"Ver: Grados/Roles 🔁";renderAll();};
 document.getElementById("btnPlayScale").onclick=playCurrentScale;
