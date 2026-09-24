@@ -624,6 +624,17 @@ tr.row-btn:hover td{background:var(--surface2)}
       <h3 style="margin-top:0">Resultado</h3>
       <div id="finderResult">Toca notas en el mástil de arriba para identificar el acorde.</div>
     </div>
+    <div class="card">
+      <h3 style="margin-top:0">Del nombre a la digitación</h3>
+      <p>Al revés: escribe una progresión de acordes separados por espacios, en notas latinas (<b>Sol Lam Sim7 Do</b>) o anglosajonas (<b>G Am Bm7 C</b>), y te doy una digitación real — dentro de lo que da una mano (máx. 4 trastes de estiramiento por posición).</p>
+      <div class="controls">
+        <input type="text" id="chordProgInput" placeholder="Sol Lam Sim7 Do" style="flex:1;min-width:220px;background:var(--surface2);color:var(--ivory);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px">
+        <button class="btn-gold" id="btnChordProgGo">Buscar digitaciones</button>
+        <button class="btn" id="btnChordProgPlayAll" disabled>▶ Progresión completa</button>
+      </div>
+      <p class="hint" id="chordProgError" style="color:var(--red)"></p>
+      <div class="posgrid" id="chordProgResults" style="margin-top:14px"></div>
+    </div>
   </section>
 
   <!-- ===================== AYUDA ===================== -->
@@ -2266,6 +2277,192 @@ function renderFinder(){
     <p class="muted" style="font-size:13px">Notas: ${noteRoles.join(" · ")}</p>
     ${notaBookless}${altsHtml}`;
 }
+/* ================= DEL NOMBRE A LA DIGITACIÓN ================= */
+/* Al revés que identifyChordCandidates: aquí el usuario escribe el nombre y buscamos digitaciones
+   reales. Tabla de nombres de tónica (más largos primero, para que "Sol#" no quede enmascarado por
+   "Sol") y de sufijos de calidad, mapeados a los mismos códigos .q de CHORD_TEMPLATES. */
+const CHORD_ROOT_NAMES=[
+  ["Do#",1],["Reb",1],["Re#",3],["Mib",3],["Fa#",6],["Solb",6],["Sol#",8],["Lab",8],["La#",10],["Sib",10],
+  ["Do",0],["Re",2],["Mi",4],["Fa",5],["Sol",7],["La",9],["Si",11],
+  ["C#",1],["Db",1],["D#",3],["Eb",3],["F#",6],["Gb",6],["G#",8],["Ab",8],["A#",10],["Bb",10],
+  ["C",0],["D",2],["E",4],["F",5],["G",7],["A",9],["B",11]
+];
+/* "m"/"M" son sensibles a mayúsculas a propósito (m7 = menor7, M7 = Maj7); el resto de sufijos no. */
+const CHORD_QUALITY_RULES=[
+  [/^maj7$/i,"maj7"],[/^M7$/,"maj7"],[/^Δ7?$/,"maj7"],
+  [/^maj9$/i,"maj9"],[/^M9$/,"maj9"],
+  [/^maj11$/i,"maj11"],
+  [/^maj13$/i,"maj13"],
+  [/^m\(?maj7\)?$/i,"mMaj7"],[/^mM7$/,"mMaj7"],
+  [/^m\(?maj9\)?$/i,"mMaj9"],
+  [/^m7b5$/i,"m7b5"],[/^m7-5$/i,"m7b5"],[/^ø7?$/,"m7b5"],[/^min7b5$/i,"m7b5"],
+  [/^dim7$/i,"dim7"],[/^°7$/,"dim7"],
+  [/^dim$/i,"dim"],[/^°$/,"dim"],
+  [/^augmaj7$/i,"augMaj7"],[/^\+maj7$/i,"augMaj7"],
+  [/^aug$/i,"aug"],[/^\+$/,"aug"],
+  [/^7#5$/,"7#5"],[/^7\+5$/,"7#5"],[/^7aug$/i,"7#5"],
+  [/^7b5$/,"7b5"],[/^7-5$/,"7b5"],
+  [/^7sus4$/i,"7sus4"],[/^7sus$/i,"7sus4"],
+  [/^7sus2$/i,"7sus2"],
+  [/^sus4$/i,"sus4"],[/^sus$/i,"sus4"],
+  [/^sus2$/i,"sus2"],
+  [/^madd9$/i,"madd9"],[/^m\(add9\)$/i,"madd9"],
+  [/^add9$/i,"add9"],
+  [/^madd11$/i,"madd11"],
+  [/^add11$/i,"add11"],
+  [/^6\/9$/,"6/9"],[/^69$/,"6/9"],
+  [/^m6\/9$/i,"m6/9"],[/^m69$/i,"m6/9"],
+  [/^m6$/i,"m6"],[/^min6$/i,"m6"],
+  [/^6$/,"6"],
+  [/^7b9$/,"7b9"],[/^7-9$/,"7b9"],
+  [/^7#9$/,"7#9"],[/^7\+9$/,"7#9"],
+  [/^m9$/i,"m9"],[/^min9$/i,"m9"],
+  [/^9$/,"9"],
+  [/^m11$/i,"m11"],[/^min11$/i,"m11"],
+  [/^11$/,"11"],
+  [/^m13$/i,"m13"],[/^min13$/i,"m13"],
+  [/^13$/,"13"],
+  [/^m7$/i,"m7"],[/^min7$/i,"m7"],[/^-7$/,"m7"],
+  [/^7$/,"7"],
+  [/^maj$/i,"maj"],
+  [/^m$/i,"min"],[/^min$/i,"min"],[/^-$/,"min"]
+];
+function parseChordQuality(suf){
+  if(suf==="")return"maj";
+  for(const[re,q]of CHORD_QUALITY_RULES)if(re.test(suf))return q;
+  return null;
+}
+function parseChordToken(tok){
+  tok=tok.trim();
+  if(!tok)return null;
+  const lower=tok.toLowerCase();
+  let hit=null;
+  for(const[name,pc]of CHORD_ROOT_NAMES){
+    if(lower.startsWith(name.toLowerCase())){hit={pc,len:name.length};break;}
+  }
+  if(!hit)return{raw:tok,error:"root"};
+  const q=parseChordQuality(tok.slice(hit.len));
+  if(q===null)return{raw:tok,error:"quality"};
+  return{raw:tok,root:hit.pc,tpl:CHORD_TEMPLATES.find(t=>t.q===q)};
+}
+/* Cuántos dedos hace falta para pisar una digitación: cuerdas contiguas (sin ninguna al aire o
+   muteada de por medio) en el MISMO traste cuentan como una sola cejilla = 1 dedo, porque un dedo
+   plano sí puede cubrirlas; en cuanto hay un hueco (cuerda al aire o muteada) entre dos notas del
+   mismo traste, ya no es un solo dedo físico — un dedo no puede pisar y a la vez dejar una cuerda
+   al aire por en medio — así que cuentan aparte. */
+function fingerCount(combo){
+  let count=0;
+  for(let i=0;i<combo.length;i++){
+    if(combo[i]===null||combo[i]===0)continue;
+    let j=i;
+    while(j+1<combo.length&&combo[j+1]===combo[i])j++;
+    count++;
+    i=j;
+  }
+  return count;
+}
+/* Busca hasta 2 digitaciones jugables para un acorde (raíz + plantilla de intervalos), deslizando
+   una ventana de máx. 4 trastes de estiramiento por todo el mástil (lo que da una mano — mismo
+   límite que randomChordShape) y probando, por fuerza bruta pero acotada, todas las combinaciones
+   de "esta cuerda muteada / al aire / pisada en tal traste" dentro de esa ventana. Se descartan las
+   combinaciones que no suenen la fundamental, que no suenen la nota que define la calidad del
+   acorde, que necesiten más de 4 dedos o menos de 3 notas. Entre las que quedan, puntúa mejor
+   cubrir más notas del acorde, usar más cuerdas, necesitar menos dedos y estar más cerca del
+   traste 0 (más cómoda). */
+function findChordFingerings(rootPc,tpl){
+  const targetRel=new Set(tpl.iv);
+  const n=OPEN.length;
+  const spanLimit=4;
+  const results=[];
+  for(let base=0;base<=FRETS-spanLimit;base++){
+    const options=[];
+    for(let s=0;s<n;s++){
+      const opts=[null];
+      const openRel=((OPEN[s]%12)-rootPc+12)%12;
+      if(targetRel.has(openRel))opts.push(0);
+      for(let f=Math.max(base,1);f<=base+spanLimit&&f<=FRETS;f++){
+        const rel=((OPEN[s]+f)%12-rootPc+12)%12;
+        if(targetRel.has(rel))opts.push(f);
+      }
+      options.push(opts);
+    }
+    const combo=new Array(n).fill(null);
+    const best={score:-Infinity,combo:null};
+    (function dfs(s){
+      if(s===n){
+        const playedIdx=[];
+        for(let i=0;i<n;i++)if(combo[i]!==null)playedIdx.push(i);
+        if(playedIdx.length<3)return;
+        const fretted=playedIdx.map(i=>combo[i]).filter(f=>f!==0);
+        const span=fretted.length?Math.max(...fretted)-Math.min(...fretted):0;
+        if(span>spanLimit)return;
+        const fingers=fingerCount(combo);
+        if(fingers>4)return;
+        const relSet=new Set(playedIdx.map(i=>{const rel=((OPEN[i]+combo[i])%12-rootPc+12)%12;return rel;}));
+        if(!relSet.has(0)||!relSet.has(tpl.req))return;
+        const coverage=[...relSet].filter(r=>targetRel.has(r)).length;
+        const mutedCount=n-playedIdx.length;
+        const score=coverage*100+playedIdx.length*10-mutedCount*4-span*3-fingers*2-base*3;
+        if(score>best.score){best.score=score;best.combo=combo.slice();}
+      } else {
+        for(const opt of options[s]){combo[s]=opt;dfs(s+1);}
+      }
+    })(0);
+    if(best.combo)results.push({base,frets:best.combo,score:best.score});
+  }
+  results.sort((a,b)=>b.score-a.score);
+  const chosen=[];
+  for(const r of results){
+    if(chosen.length&&Math.abs(chosen[0].base-r.base)<3)continue;
+    chosen.push(r);
+    if(chosen.length>=2)break;
+  }
+  if(!chosen.length&&results.length)chosen.push(results[0]);
+  return chosen;
+}
+let chordProgVoicings=[];
+function renderChordProgResults(){
+  const tokens=document.getElementById("chordProgInput").value.trim().split(/\s+/).filter(Boolean);
+  const errEl=document.getElementById("chordProgError");
+  const wrap=document.getElementById("chordProgResults");
+  const playAllBtn=document.getElementById("btnChordProgPlayAll");
+  errEl.textContent="";wrap.innerHTML="";playAllBtn.disabled=true;chordProgVoicings=[];
+  if(!tokens.length)return;
+  const parsed=tokens.map(parseChordToken);
+  const bad=parsed.filter(p=>p.error);
+  if(bad.length)errEl.textContent=`No entiendo: ${bad.map(b=>`"${b.raw}"`).join(", ")}. Prueba con nombres como "Sol", "Lam", "Sim7", "Do7", "Fa#dim" o su equivalente en inglés ("G","Am","Bm7","C7","F#dim").`;
+  const ok=parsed.filter(p=>!p.error);
+  ok.forEach(p=>{
+    const rootName=NN[p.root].replace("#","♯");
+    const fingerings=findChordFingerings(p.root,p.tpl);
+    if(!fingerings.length){
+      wrap.insertAdjacentHTML("beforeend",`<div class="posbox"><div class="posbox-title">${rootName} ${p.tpl.name}</div><p class="hint">No encontré una digitación cómoda (dentro de 4 trastes) para este acorde con ${INSTRUMENTS[instrumentKey].name.toLowerCase()}.</p></div>`);
+      chordProgVoicings.push(null);
+      return;
+    }
+    fingerings.forEach((fg,i)=>{
+      const rows=new Array(OPEN.length).fill(null);
+      for(let s=0;s<OPEN.length;s++){
+        const f=fg.frets[s];
+        if(f===null){rows[s]={muted:true};continue;}
+        const pc=(OPEN[s]+f)%12;
+        const rel=(pc-p.root+12)%12;
+        rows[s]={notes:[{fret:f,label:showNames?NN[pc].replace("#","♯"):(CORE_SHORT[rel]||"?"),color:CORE_COLOR[rel]||"#7BC8C1",isRoot:rel===0}]};
+      }
+      const nonNull=fg.frets.filter(f=>f!==null);
+      const win={start:Math.min(...nonNull),end:Math.max(...nonNull)};
+      const barreGroups=detectBarreGroups(fg.frets);
+      const indexBarre=barreGroups.find(g=>g.index);
+      const posTxt=win.start===0?"posición abierta":(indexBarre?`cejilla en el traste ${indexBarre.fret}`:`traste ${win.start}`);
+      const altTxt=fingerings.length>1?(i===0?" · opción 1":" · opción 2"):"";
+      const title=`${rootName} ${p.tpl.name} · ${posTxt}${altTxt}`;
+      wrap.insertAdjacentHTML("beforeend",miniFretboardHTML(title,win,rows,false,barreGroups));
+      if(i===0)chordProgVoicings.push(fg.frets);
+    });
+  });
+  wrap.querySelectorAll(".mdot").forEach(d=>{d.onclick=()=>{try{pluck(OPEN[+d.dataset.s]+ +d.dataset.f,ctx().currentTime);}catch(e){console.warn("Audio no disponible:",e);}};});
+  playAllBtn.disabled=!chordProgVoicings.some(v=>v);
+}
 /* ================= RENDER: CAGED ================= */
 function renderCaged(){
   const qualLabel=cagedQual==="min"?"menor":"Mayor";
@@ -2641,6 +2838,20 @@ document.getElementById("btnFinderStrum").onclick=()=>{
 document.getElementById("btnFinderArp").onclick=()=>{
   const midis=finderNotes.slice().sort((a,b)=>a.s-b.s).map(n=>OPEN[n.s]+n.f);
   try{if(midis.length)arp(midis);}catch(e){console.warn("Audio no disponible:",e);}
+};
+document.getElementById("btnChordProgGo").onclick=renderChordProgResults;
+document.getElementById("chordProgInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();renderChordProgResults();}});
+document.getElementById("btnChordProgPlayAll").onclick=()=>{
+  try{
+    const c=ctx();let t0=c.currentTime;
+    chordProgVoicings.forEach(frets=>{
+      if(frets){
+        const midis=frets.map((f,i)=>f===null?null:OPEN[i]+f).filter(x=>x!==null);
+        midis.forEach((m,i)=>pluck(m,t0+i*0.03,1.0));
+      }
+      t0+=1.0;
+    });
+  }catch(e){console.warn("Audio no disponible:",e);}
 };
 function playKeySound(sel){
   const iv=sel.kind==="minor"?[0,3,7]:[0,4,7];
