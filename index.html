@@ -628,6 +628,12 @@ tr.row-btn:hover td{background:var(--surface2)}
       <h3 style="margin-top:0">Del nombre a la digitación</h3>
       <p>Al revés: escribe una progresión de acordes separados por espacios, en notas latinas (<b>Sol Lam Sim7 Do</b>) o anglosajonas (<b>G Am Bm7 C</b>), y te doy una digitación real — dentro de lo que da una mano (máx. 4 trastes de estiramiento por posición).</p>
       <div class="controls">
+        <div class="seg" id="segChordProgMode">
+          <button data-v="open" class="on">Posiciones abiertas</button>
+          <button data-v="triads">Triadas e inversiones</button>
+        </div>
+      </div>
+      <div class="controls">
         <input type="text" id="chordProgInput" placeholder="Sol Lam Sim7 Do" style="flex:1;min-width:220px;background:var(--surface2);color:var(--ivory);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px">
         <button class="btn-gold" id="btnChordProgGo">Buscar digitaciones</button>
         <button class="btn" id="btnChordProgPlayAll" disabled>▶ Progresión completa</button>
@@ -2420,7 +2426,27 @@ function findChordFingerings(rootPc,tpl){
   if(!chosen.length&&results.length)chosen.push(results[0]);
   return chosen;
 }
+/* Reconstruye la triada "de base" de cualquier plantilla (incluida una con 7ª/9ª/etc.): la
+   fundamental, la nota que define su calidad (tpl.req — 3ª o el tono de un sus) y la 5ª (justa,
+   disminuida o aumentada, la que traiga la plantilla). Con esto cualquier acorde escrito se puede
+   mostrar también como triada con sus 3 inversiones, igual que en la pestaña Triadas. */
+function triadIvFor(tpl){
+  const fifth=tpl.iv.find(x=>x===6||x===7||x===8);
+  return[0,tpl.req,fifth];
+}
+function shapeForChordTriad(rootPc,tpl,setI,invI){
+  const pcs=triadIvFor(tpl).map(x=>(rootPc+x)%12);
+  const inv=INVS[invI],set=SETS[setI];
+  const fr=findShape(set.i,inv.o.map(oi=>pcs[oi]));
+  return fr?{strs:set.i,frets:fr,roles:inv.r}:null;
+}
+function shapeToFullFrets(sh){
+  const full=new Array(OPEN.length).fill(null);
+  sh.strs.forEach((s,i)=>full[s]=sh.frets[i]);
+  return full;
+}
 let chordProgVoicings=[];
+let chordProgMode="open";
 function renderChordProgResults(){
   const tokens=document.getElementById("chordProgInput").value.trim().split(/\s+/).filter(Boolean);
   const errEl=document.getElementById("chordProgError");
@@ -2432,8 +2458,31 @@ function renderChordProgResults(){
   const bad=parsed.filter(p=>p.error);
   if(bad.length)errEl.textContent=`No entiendo: ${bad.map(b=>`"${b.raw}"`).join(", ")}. Prueba con nombres como "Sol", "Lam", "Sim7", "Do7", "Fa#dim" o su equivalente en inglés ("G","Am","Bm7","C7","F#dim").`;
   const ok=parsed.filter(p=>!p.error);
+  const roleColor={R:"#C9A227","3":"#4FA8A0","5":"#E4C766"};
   ok.forEach(p=>{
     const rootName=NN[p.root].replace("#","♯");
+    if(chordProgMode==="triads"){
+      let firstFull=null;
+      for(let invI=0;invI<3;invI++){
+        const sh=shapeForChordTriad(p.root,p.tpl,0,invI);
+        if(!sh){
+          wrap.insertAdjacentHTML("beforeend",`<div class="posbox"><div class="posbox-title">${rootName} ${p.tpl.name} · ${INVS[invI].n}</div><p class="hint">No cabe en ${SETS[0].l.toLowerCase()} dentro de 4 trastes.</p></div>`);
+          continue;
+        }
+        const rows=new Array(OPEN.length).fill(null);
+        sh.strs.forEach((s,i)=>{
+          const pc=(OPEN[s]+sh.frets[i])%12;
+          rows[s]={notes:[{fret:sh.frets[i],label:showNames?NN[pc].replace("#","♯"):sh.roles[i],color:roleColor[sh.roles[i]],isRoot:sh.roles[i]==="R"}]};
+        });
+        const win={start:Math.min(...sh.frets),end:Math.max(...sh.frets)};
+        const title=`${rootName} ${p.tpl.name} · ${INVS[invI].n}`;
+        const full=shapeToFullFrets(sh);
+        wrap.insertAdjacentHTML("beforeend",miniFretboardHTML(title,win,rows,false,detectBarreGroups(full)));
+        if(invI===0)firstFull=full;
+      }
+      chordProgVoicings.push(firstFull);
+      return;
+    }
     const fingerings=findChordFingerings(p.root,p.tpl);
     if(!fingerings.length){
       wrap.insertAdjacentHTML("beforeend",`<div class="posbox"><div class="posbox-title">${rootName} ${p.tpl.name}</div><p class="hint">No encontré una digitación cómoda (dentro de 4 trastes) para este acorde con ${INSTRUMENTS[instrumentKey].name.toLowerCase()}.</p></div>`);
@@ -2839,6 +2888,11 @@ document.getElementById("btnFinderArp").onclick=()=>{
   const midis=finderNotes.slice().sort((a,b)=>a.s-b.s).map(n=>OPEN[n.s]+n.f);
   try{if(midis.length)arp(midis);}catch(e){console.warn("Audio no disponible:",e);}
 };
+document.getElementById("segChordProgMode").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  chordProgMode=b.dataset.v;
+  document.querySelectorAll("#segChordProgMode button").forEach(x=>x.classList.toggle("on",x===b));
+  renderChordProgResults();
+});
 document.getElementById("btnChordProgGo").onclick=renderChordProgResults;
 document.getElementById("chordProgInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();renderChordProgResults();}});
 document.getElementById("btnChordProgPlayAll").onclick=()=>{
