@@ -320,6 +320,12 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <div class="posgrid" id="modePatterns"></div>
       <p class="hint">💡 Halo claro = cuerda al aire. Borde blanco = tónica.</p>
     </div>
+      <div class="card">
+      <h3 style="margin-top:0">¿Sobre qué acorde va cada modo?</h3>
+      <p class="muted" style="font-size:13px">Apilando terceras desde la tónica de cada modo sale el acorde de 4 notas que lo "pide". Pulsa una fila: se activa el modo, suena el acorde y encima la escala, para oír por qué encajan.</p>
+      <div id="modeChordList"></div>
+      <p class="hint" id="modeChordHint"></p>
+    </div>
   </section>
 
   <!-- ===================== CÍRCULO DE QUINTAS ===================== -->
@@ -637,6 +643,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
           <button data-v="calidad">Mayor / menor / dim</button>
           <button data-v="intervalo">Intervalos</button>
           <button data-v="nota">¿Qué nota es? 👁</button>
+          <button data-v="acorde">Identifica el acorde 🎸</button>
         </div>
         <label id="lblQuizEasy" style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px" hidden><input type="checkbox" id="chkQuizEasy"> Fácil: solo notas naturales y los 7 primeros trastes</label>
         <span class="pill" id="quizScore">Aciertos: 0/0</span>
@@ -673,6 +680,17 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
         <span>Franja roja = cejilla del índice</span>
       </div>
       <p class="hint" id="buildInfo"></p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">El acorde disminuido es simétrico</h3>
+      <p>Un dim7 apila terceras menores (3 semitonos), así que se repite igual cada 3 trastes: la misma forma, movida 3 trastes, es el mismo acorde con otro nombre. Elige uno y mira sus cuatro nombres y las cuatro formas (una por cada nota en el bajo) repartidas por el mástil.</p>
+      <div class="controls">
+        <select id="selDimRoot"></select>
+        <button class="btn" id="btnDimPlay">▶ Escuchar las 4 formas</button>
+      </div>
+      <div id="dimNames"></div>
+      <div class="fb-scroll"><div class="fretboard" id="fbDim"></div></div>
+      <p class="hint" id="dimInfo"></p>
     </div>
     <div class="card">
       <h2>Identificar un acorde</h2>
@@ -815,7 +833,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Todas las notas de la escala/modo elegido, por todo el mástil. Filtra por grado para aislar un color. Debajo, <b>patrones/posiciones</b>: la misma escala troceada en cajas que se tocan sin mover la mano.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('modos')" style="margin-top:0">🎨 Modos</h3>
-      <p>Los 7 modos de la escala mayor. Pulsa uno para activarlo en toda la app y compararlo con la mayor. La nota (o notas) que lo diferencia de la mayor pulsa con un anillo en el mástil y en los patrones — es lo que le da su sabor propio.</p>
+      <p>Los 7 modos de la escala mayor. Pulsa uno para activarlo en toda la app y compararlo con la mayor. La nota (o notas) que lo diferencia de la mayor pulsa con un anillo en el mástil y en los patrones — es lo que le da su sabor propio. Al final, una lista con el acorde que pide cada modo (Dórico → m7, Mixolidio → dominante...) que puedes oír tocando el acorde y la escala encima.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('circulo')" style="margin-top:0">⭕ Círculo de quintas</h3>
       <p>Pulsa una tonalidad (mayor o su relativa menor) en la rueda (con el selector puedes verla como círculo de cuartas, el mismo círculo al revés): te da sus notas, alteraciones, vecinas, armonización rápida y dónde tocar la tónica en el mástil.</p>
@@ -842,7 +860,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Las 5 formas de acorde abierto (C-A-G-E-D) movidas con cejilla para tocar el acorde de la tónica actual en 5 sitios distintos del mástil.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('finder')" style="margin-top:0">📖 Diccionario de acordes</h3>
-      <p>Dos herramientas en una. <b>Construir</b>: eliges tónica y tipo (tríadas, sextas, séptimas, novenas, 11ª, 13ª, alterados...) y ves su fórmula y varias digitaciones por el mástil. <b>Identificar</b>: pones tú las notas (una por cuerda) y la app dice qué acorde es, con notación de barra (Do/Mi), si es fundamental o inversión, y otras formas de leer las mismas notas. Al final, <b>Del nombre a la digitación</b>: escribes una progresión y te doy posiciones abiertas o la triada con sus inversiones, dentro de lo que da una mano.</p>
+      <p>Dos herramientas en una. <b>Construir</b>: eliges tónica y tipo (tríadas, sextas, séptimas, novenas, 11ª, 13ª, alterados...) y ves su fórmula y varias digitaciones por el mástil. <b>Identificar</b>: pones tú las notas (una por cuerda) y la app dice qué acorde es, con notación de barra (Do/Mi), si es fundamental o inversión, y otras formas de leer las mismas notas. También explica por qué el <b>dim7 es simétrico</b> (se repite cada 3 trastes y tiene cuatro nombres). Al final, <b>Del nombre a la digitación</b>: escribes una progresión y te doy posiciones abiertas o la triada con sus inversiones, dentro de lo que da una mano.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('prog')" style="margin-top:0">🧭 Analizar progresión</h3>
       <p>Escribes los acordes de una canción (Sol Lam Rem Do, o G Am Dm C) y la app deduce el tono, pone el número romano de cada acorde, marca los que se salen de la tonalidad (y si son dominantes secundarios o sustituciones de tritono) y dice qué escala tocar encima. Detecta también el cambio de tonalidad a mitad de canción, el blues y la menor armónica. Puedes transportar la progresión a otro tono y ver qué cejilla (capo) necesitarías.</p>
@@ -854,7 +872,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Al final de la pestaña Intervalos: pulsa cada cuerda al aire para oírla (con su frecuencia) y usa "Afinar por trastes" para entrenar el truco de afinar de oído: la nota de una cuerda en cierto traste iguala a la siguiente al aire.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('practica')" style="margin-top:0">🎯 Práctica</h3>
-      <p>4 modos de entrenamiento auditivo: adivina el grado, la calidad del acorde, el intervalo, o la nota en el mástil (con un modo fácil de solo notas naturales y los 7 primeros trastes). Tras responder, ves la digitación correcta (y la tuya si fallaste) para comparar.</p>
+      <p>5 modos de entrenamiento: adivina el grado, la calidad del acorde, el intervalo, la nota en el mástil (con un modo fácil de solo notas naturales y los 7 primeros trastes) o el acorde que se marca al azar en el diapasón. Tras responder, ves la digitación correcta (y la tuya si fallaste) para comparar.</p>
     </div>
     <div class="card">
       <p class="hint">💡 En cualquier mástil o cajita: pulsa una nota para oírla suelta. Halo claro = cuerda al aire. Borde blanco = fundamental/tónica.</p>
@@ -1441,6 +1459,7 @@ function renderScalePatterns(pcs,labels,colors){
 }
 /* ================= RENDER: MODOS ================= */
 function renderModes(){
+  renderModeChords();
   const g=document.getElementById("modeGrid");g.innerHTML="";
   MODES.forEach((m,i)=>{
     const st=modeSteps(i);
@@ -2378,6 +2397,30 @@ function identifyChordAll(pcsSet,bassPc){
   out.sort((a,b)=>(b.root===bassPc)-(a.root===bassPc));
   return out;
 }
+/* Nombre de una nota que sobra respecto a la plantilla (tensión suelta). */
+const EXT_NAME={1:"♭9",2:"9",3:"♯9",4:"3",5:"11",6:"♯11",7:"5",8:"♭13",9:"13",10:"♭7",11:"7"};
+/* Si las notas no forman un acorde exacto, busca la lectura más cercana: se admite 1 nota omitida
+   (nunca la fundamental ni la que define la calidad) y hasta 2 añadidas. Así una digitación poco
+   ortodoxa pero real consigue un nombre en vez de un simple "no coincide". */
+function identifyChordApprox(pcsSet,bassPc){
+  if(pcsSet.length<3)return[];
+  const best=new Map();
+  for(const rootPc of pcsSet){
+    const rel=pcsSet.map(p=>(p-rootPc+12)%12);
+    for(const tpl of CHORD_TEMPLATES){
+      if(tpl.q==="5")continue;
+      const missing=tpl.iv.filter(x=>!rel.includes(x));
+      const extra=rel.filter(x=>!tpl.iv.includes(x));
+      if(missing.length>1||extra.length>2)continue;
+      if(missing.includes(0)||missing.includes(chordReqIv(tpl)))continue;
+      const score=100-missing.length*10-extra.length*6+(rootPc===bassPc?5:0);
+      const key=rootPc+"|"+tpl.q;
+      if(!best.has(key)||best.get(key).score<score)best.set(key,{root:rootPc,template:tpl,missing,extra,score});
+    }
+  }
+  return[...best.values()].sort((a,b)=>b.score-a.score);
+}
+const approxSuffix=m=>(m.extra&&m.extra.length?" + "+m.extra.map(x=>EXT_NAME[x]||IV_ABR[x]).join(", "):"")+(m.missing&&m.missing.length?" (sin "+m.missing.map(x=>EXT_NAME[x]||IV_ABR[x]).join(", ")+")":"");
 function finderInversionLabel(root,bassPc,tpl){
   const idx=tpl.iv.indexOf((bassPc-root+12)%12);
   if(idx<0)return "bajo fuera del acorde";
@@ -2424,7 +2467,9 @@ function renderFinder(){
   const notes=finderNotes.map(n=>({...n,pc:(OPEN[n.s]+n.f)%12,midi:OPEN[n.s]+n.f})).sort((a,b)=>a.midi-b.midi);
   const uniquePcs=[...new Set(notes.map(n=>n.pc))];
   const bassPc=notes.length?notes[0].pc:null;
-  const matches=identifyChordAll(uniquePcs,bassPc);
+  let matches=identifyChordAll(uniquePcs,bassPc);
+  let approx=false;
+  if(!matches.length&&uniquePcs.length>=3){matches=identifyChordApprox(uniquePcs,bassPc);approx=matches.length>0;}
   const result=matches[0]||null;
 
   const el=document.getElementById("fbFinder");const geo=fbBase(el);
@@ -2441,6 +2486,9 @@ function renderFinder(){
             const deg=result.template.deg[idx];
             color=DEG_COLOR(deg);isRoot=idx===0;
             if(!showNames)label=deg;
+          } else {
+            color="#C1584B";
+            if(!showNames)label=EXT_NAME[(pc-result.root+12)%12]||"?";
           }
         }
         addDot(el,geo,s,f,label,color,isRoot,false,()=>toggleFinderNote(s,f));
@@ -2468,17 +2516,95 @@ function renderFinder(){
   const inv=finderInversionLabel(result.root,bassPc,result.template);
   const chips=notes.map(n=>{
     const idx=result.template.iv.indexOf((n.pc-result.root+12)%12);
-    const deg=idx>=0?result.template.deg[idx]:"?";
-    return `<span class="nchip" style="background:${DEG_COLOR(deg)}"><b>${deg}</b><span>${nmS(n.pc)}</span></span>`;
+    const deg=idx>=0?result.template.deg[idx]:(EXT_NAME[(n.pc-result.root+12)%12]||"?");
+    return `<span class="nchip" style="background:${idx>=0?DEG_COLOR(deg):"#C1584B"}"><b>${deg}</b><span>${nmS(n.pc)}</span></span>`;
   }).join('<span class="muted" style="align-self:center">›</span>');
-  const alts=matches.slice(1).map(m=>`${fullChordName(m.root,m.template,bassPc)} <span class="muted">(${finderInversionLabel(m.root,bassPc,m.template)})</span>`);
-  resEl.innerHTML=`<div style="font-family:'Fraunces',serif;font-size:34px;color:var(--brass);line-height:1.1">${fullChordName(result.root,result.template,bassPc)}</div>
+  const altList=approx?matches.slice(1,4).filter(m=>m.score>=result.score-20):matches.slice(1);
+  const alts=altList.map(m=>`${fullChordName(m.root,m.template,bassPc)}${approx?approxSuffix(m):""} <span class="muted">(${finderInversionLabel(m.root,bassPc,m.template)})</span>`);
+  const approxNote=approx?`<p class="hint">💡 No es una digitación "de libro"${result.missing.length?` (falta la ${result.missing.map(x=>EXT_NAME[x]||IV_ABR[x]).join(", ")})`:""}${result.extra.length?` (nota${result.extra.length>1?"s":""} añadida${result.extra.length>1?"s":""}: ${result.extra.map(x=>EXT_NAME[x]||IV_ABR[x]).join(", ")})`:""}, pero las notas presentes sí forman este acorde. Las notas en rojo son las que se salen de la fórmula.</p>`:"";
+  resEl.innerHTML=`<div style="font-family:'Fraunces',serif;font-size:34px;color:var(--brass);line-height:1.1">${fullChordName(result.root,result.template,bassPc)}${approx?`<span style="font-size:18px;color:var(--teal-soft)">${approxSuffix(result)}</span>`:""}</div>
     <p style="margin:6px 0">${nmS(result.root)} ${result.template.name} · <b>${inv}</b>${inv.startsWith("Fundamental")?"":` · bajo: <b>${nmS(bassPc)}</b>`}</p>
     <p class="muted" style="font-size:12px;margin:10px 0 4px">De la nota más grave a la más aguda (grado dentro del acorde):</p>
     <div class="nchips">${chips}</div>
+    ${approxNote}
     ${alts.length?`<p class="muted" style="font-size:13px;margin-top:12px">Las mismas notas también se pueden leer como: ${alts.join(" · ")}.</p>`:""}`;
 }
 
+/* ---- Modos y acordes: el acorde de 4 notas que sale de apilar terceras desde la tónica de cada modo ---- */
+const MODE_CHORD_NOTE=[
+ "mayor estable: el acorde de casa",
+ "menor con 6ª mayor: la menor más luminosa",
+ "menor con 2ª menor: la menor más oscura",
+ "mayor con 4ª aumentada: un mayor flotante, sin ganas de resolver",
+ "dominante: el acorde que pide resolver",
+ "menor con 6ª menor: la menor natural, la más triste",
+ "semidisminuido: inestable, el de ii en tonalidad menor"
+];
+function renderModeChords(){
+  const box=document.getElementById("modeChordList");box.innerHTML="";
+  MODES.forEach((m,i)=>{
+    const st=modeSteps(i),iv=[st[0],st[2],st[4],st[6]];
+    const tpl=CHORD_TEMPLATES.find(t=>t.iv.length===4&&t.iv.every((x,k)=>x===iv[k]));
+    const row=document.createElement("div");
+    row.className="keycand"+(i===modeIdx?" best":"");row.style.cursor="pointer";
+    row.innerHTML=`<b>${nmS(root)} ${m.n}</b><span><b style="color:var(--ivory)">${tpl?nmS(root)+tpl.sym:"?"}</b> · ${MODE_CHORD_NOTE[i]}</span>`;
+    row.onclick=()=>{
+      modeIdx=i;scaleKind="modo";renderAll();
+      try{
+        if(tpl)strum(chordMidis(root,tpl));
+        setTimeout(()=>{try{arp(modeSteps(i).concat([12]).map(s=>48+root+s),.24,.34);}catch(e){console.warn("Audio no disponible:",e);}},1300);
+      }catch(e){console.warn("Audio no disponible:",e);}
+    };
+    box.appendChild(row);
+  });
+  document.getElementById("modeChordHint").textContent="Sobre un acorde m7 caben tres modos (Dórico, Frigio o Eólico): solo cambian la 2ª y la 6ª, y con ellas el color. Sobre un mayor, Jónico o Lidio (cambia la 4ª). Sobre un dominante, Mixolidio.";
+}
+/* ---- El dim7 es simétrico: 4 nombres, y la misma forma se repite cada 3 trastes ---- */
+let dimRoot=0,dimShapes=[];
+/* Primera digitación (de abajo arriba por el mástil) cuyas notas suben de grave a agudo; en afinaciones
+   reentrantes (ukelele) no hay orden ascendente posible, así que se acepta la primera que quepa. */
+function findAscShape(strs,order){
+  const asc=OPEN.every((o,i)=>i===0||o>OPEN[i-1]);
+  let b=0;
+  while(b<=FRETS-4){
+    const fr=findShapeN(strs,order,4,b);
+    if(!fr)return null;
+    const m=strs.map((s,i)=>OPEN[s]+fr[i]);
+    if(!asc||m.every((x,i)=>i===0||x>m[i-1]))return fr;
+    b=Math.min(...fr)+1;
+  }
+  return null;
+}
+/* Mejor digitación (la más baja en el mástil) con una nota concreta en el bajo: se prueban las 6
+   formas de repartir las otras tres notas entre las cuerdas de arriba. */
+function dimShapeFor(strs,bassPc,pcs){
+  const rest=pcs.filter(p=>p!==bassPc);
+  let best=null;
+  for(const pm of [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]]){
+    const fr=findAscShape(strs,[bassPc,...pm.map(i=>rest[i])]);
+    if(fr){const top=Math.max(...fr);if(!best||top<best.top)best={fr,top};}
+  }
+  return best?best.fr:null;
+}
+function renderDimSym(){
+  const sel=document.getElementById("selDimRoot");
+  sel.innerHTML="";NN.forEach((n,i)=>sel.add(new Option(nmS(i)+" dim7",i)));sel.value=dimRoot;
+  const colors=["#C9A227","#4FA8A0","#9C6FB8","#C1584B"];
+  const pcs=[0,3,6,9].map(x=>(dimRoot+x)%12);
+  const strs=OPEN.length>=5?[1,2,3,4]:[0,1,2,3].filter(s=>s<OPEN.length);
+  const el=document.getElementById("fbDim");const geo=fbBase(el);
+  dimShapes=[];
+  for(let k=0;k<4;k++){
+    const fr=dimShapeFor(strs,pcs[k],pcs);
+    if(!fr)continue;
+    dimShapes.push({strs,frets:fr,color:colors[k],bass:pcs[k]});
+    strs.forEach((s,i)=>{const f=fr[i];addDot(el,geo,s,f,nmS((OPEN[s]+f)%12),colors[k],false,false,()=>{try{pluck(OPEN[s]+f,ctx().currentTime);}catch(e){console.warn("Audio no disponible:",e);}});});
+  }
+  const names=pcs.map((p,i)=>`<span class="nchip" style="background:${colors[i]}"><b>${nmS(p)}dim7</b><span>${i===0?"el elegido":"mismas notas"}</span></span>`).join('<span class="muted" style="align-self:center">=</span>');
+  const forms=dimShapes.length?`<p class="muted" style="font-size:12px;margin:8px 0 0">Formas (color = nota en el bajo): ${dimShapes.map(s=>`<span style="color:${s.color}">●</span> ${nmS(s.bass)} · trastes ${s.frets.join("-")}`).join(" · ")}</p>`:"";
+  document.getElementById("dimNames").innerHTML=`<div class="nchips" style="margin:8px 0">${names}</div>${forms}`;
+  document.getElementById("dimInfo").textContent=`Sin su fundamental, ${nmS(dimRoot)}dim7 suena como un dominante con 7♭9: es lo mismo que ${nmS((dimRoot+8)%12)}7♭9, ${nmS((dimRoot+11)%12)}7♭9, ${nmS((dimRoot+2)%12)}7♭9 o ${nmS((dimRoot+5)%12)}7♭9 sin la fundamental. Por eso se usa tanto para pasar de un acorde a otro.`;
+}
 /* ---- Constructor: tónica + tipo -> fórmula, notas y digitaciones a lo largo del mástil ---- */
 let buildRoot=0,buildQ="maj";
 const BUILD_GROUPS=[
@@ -3149,17 +3275,56 @@ function renderChordProgResults(){
   playAllBtn.disabled=!chordProgVoicings.some(v=>v);
 }
 /* ================= QUIZ ================= */
+/* Acorde aleatorio con digitación real: N cuerdas consecutivas reciben, en orden, las notas de la
+   plantilla (fundamental en la más grave), dentro de una ventana de 4 trastes — lo que da una mano. */
+function randomChordShape(){
+  const pool=CHORD_TEMPLATES.filter(t=>!t.noBuild&&t.iv.length<=OPEN.length);
+  for(let attempt=0;attempt<60;attempt++){
+    const root=Math.floor(Math.random()*12);
+    const tpl=pool[Math.floor(Math.random()*pool.length)];
+    const n=tpl.iv.length;
+    const startStr=Math.floor(Math.random()*(OPEN.length-n+1));
+    const strs=Array.from({length:n},(_,i)=>startStr+i);
+    const fr=findShapeN(strs,tpl.iv.map(x=>(root+x)%12),4,0);
+    if(fr)return{root,template:tpl,strs,frets:fr};
+  }
+  return null;
+}
+const chordPcKey=(root,tpl)=>tpl.iv.map(x=>(root+x)%12).sort((a,b)=>a-b).join(",");
+/* Cuatro opciones de respuesta; ninguna distractora puede sonar con las mismas notas que la correcta
+   (Do dim7 y Mib dim7, o Do sus2 y Sol sus4, son el mismo conjunto de notas). */
+function chordQuizOptions(picked){
+  const key=picked.root+"|"+picked.template.q;
+  const opts=[{l:`${nmS(picked.root)} ${picked.template.name}`,v:key}];
+  const usedPcs=new Set([chordPcKey(picked.root,picked.template)]);
+  const pool=CHORD_TEMPLATES.filter(t=>!t.noBuild);
+  for(let guard=0;opts.length<4&&guard<400;guard++){
+    const root=Math.floor(Math.random()*12),tpl=pool[Math.floor(Math.random()*pool.length)];
+    const pk=chordPcKey(root,tpl);
+    if(usedPcs.has(pk))continue;
+    usedPcs.add(pk);
+    opts.push({l:`${nmS(root)} ${tpl.name}`,v:root+"|"+tpl.q});
+  }
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return opts;
+}
 const QMETA={
   grado:{prompt:"Escucha la triada y di sobre qué grado de la escala/modo actual está construida.",opts:()=>ROM.map((r,i)=>({l:String(i+1),v:i}))},
   calidad:{prompt:"Escucha la triada suelta: ¿es mayor, menor o disminuida?",opts:()=>[{l:"Mayor",v:"maj"},{l:"menor",v:"min"},{l:"dim",v:"dim"}]},
   intervalo:{prompt:"Escucha dos notas: ¿qué intervalo forman? (empieza por 3ªm, 3ªM, 4ªJ, 5ªJ, 8ª y amplía)",opts:()=>INTERVALS.filter(i=>i.s>0).map(i=>({l:i.n,v:i.s}))},
-  nota:{prompt:"Mira el punto dorado en el mástil: ¿qué nota es? (pulsa ▶ si quieres pista sonora)",opts:()=>NN.map((n,i)=>({l:n,v:i})).filter(o=>!quizEasy||[0,2,4,5,7,9,11].includes(o.v))}
+  nota:{prompt:"Mira el punto dorado en el mástil: ¿qué nota es? (pulsa ▶ si quieres pista sonora)",opts:()=>NN.map((n,i)=>({l:n,v:i})).filter(o=>!quizEasy||[0,2,4,5,7,9,11].includes(o.v))},
+  acorde:{prompt:"Se marca un acorde al azar en el mástil (mayor, menor, con 7ª, add9, sus, novenas...). Escúchalo o mira la digitación y di cuál es.",opts:()=>quizPayload&&quizPayload.options?quizPayload.options:[]}
 };
 function quizNew(){
   quizSel=null;
   if(quizType==="grado"){let d;do{d=Math.floor(Math.random()*7);}while(quizPayload&&quizPayload.d!==undefined&&d===quizPayload.d);quizPayload={d};quizAns=d;}
   else if(quizType==="calidad"){const rootPc=Math.floor(Math.random()*12);const kinds=[["maj",[0,4,7]],["min",[0,3,7]],["dim",[0,3,6]]];const k=kinds[Math.floor(Math.random()*3)];quizPayload={m:k[1].map(x=>52+rootPc+x)};quizAns=k[0];}
   else if(quizType==="intervalo"){const s=INTERVALS[1+Math.floor(Math.random()*(INTERVALS.length-1))].s;const base=50+Math.floor(Math.random()*10);quizPayload={m:[base,base+s]};quizAns=s;}
+  else if(quizType==="acorde"){
+    const picked=randomChordShape();
+    quizPayload={root:picked.root,template:picked.template,strs:picked.strs,frets:picked.frets,options:chordQuizOptions(picked)};
+    quizAns=picked.root+"|"+picked.template.q;
+  }
   else{let s,f;do{s=Math.floor(Math.random()*OPEN.length);f=Math.floor(Math.random()*(quizEasy?8:13));}while(quizEasy&&![0,2,4,5,7,9,11].includes((OPEN[s]+f)%12));quizPayload={s,f};quizAns=(OPEN[s]+f)%12;}
   renderQuiz();
 }
@@ -3167,6 +3332,7 @@ function quizPlay(){
   if(quizType==="grado"){const sh=shapeFor(quizPayload.d,ssIdx,invIdx);if(sh)strum(shapeMidis(sh));}
   else if(quizType==="calidad")strum(quizPayload.m);
   else if(quizType==="intervalo")arp(quizPayload.m,.5,.9);
+  else if(quizType==="acorde")strum(quizPayload.strs.map((s,i)=>OPEN[s]+quizPayload.frets[i]));
   else pluck(OPEN[quizPayload.s]+quizPayload.f,ctx().currentTime);
 }
 function buildGradoBox(deg,label){
@@ -3199,6 +3365,22 @@ function renderQuizFb(){
   const revealed=quizSel!==null;
   addDot(el,geo,quizPayload.s,quizPayload.f,revealed?NN[quizAns].replace("#","♯"):"?","#C9A227",true,false,()=>pluck(OPEN[quizPayload.s]+quizPayload.f,ctx().currentTime));
 }
+function renderQuizChordFb(){
+  const el=document.getElementById("fbQuiz");const geo=fbBase(el);
+  const revealed=quizSel!==null;
+  const{root,template,strs,frets}=quizPayload;
+  strs.forEach((s,i)=>{
+    const f=frets[i],pc=(OPEN[s]+f)%12;
+    let label="?",color="#C9A227",isRoot=false;
+    if(revealed){
+      const idx=template.iv.indexOf((pc-root+12)%12);
+      const deg=idx>=0?template.deg[idx]:"?";
+      color=DEG_COLOR(deg);isRoot=idx===0;
+      label=showNames?nmS(pc):deg;
+    }
+    addDot(el,geo,s,f,label,color,isRoot,false,()=>pluck(OPEN[s]+f,ctx().currentTime));
+  });
+}
 function renderQuiz(){
   document.getElementById("lblQuizEasy").hidden=quizType!=="nota";
   const gradeBtn=document.querySelector('#segQuiz button[data-v="grado"]');
@@ -3212,8 +3394,9 @@ function renderQuiz(){
   document.getElementById("quizPrompt").textContent=QMETA[quizType].prompt;
   document.getElementById("quizScore").textContent=`Aciertos: ${qc}/${qt}`;
   const wrap=document.getElementById("quizFbWrap");
-  wrap.hidden=quizType!=="nota";
+  wrap.hidden=quizType!=="nota"&&quizType!=="acorde";
   if(quizType==="nota")renderQuizFb();
+  else if(quizType==="acorde")renderQuizChordFb();
   const bx=document.getElementById("quizBtns");bx.innerHTML="";
   QMETA[quizType].opts().forEach(o=>{
     const b=document.createElement("button");b.textContent=o.l;
@@ -3232,6 +3415,7 @@ function renderQuiz(){
     if(quizType==="grado")ansTxt=`${romanFor(quizAns)} (${QL[triadQual(quizAns)]}) — ${triadPCs(quizAns).map(p=>NN[p]).join("-")}`;
     else if(quizType==="calidad")ansTxt=QL[quizAns];
     else if(quizType==="intervalo")ansTxt=INTERVALS.find(i=>i.s===quizAns).n;
+    else if(quizType==="acorde")ansTxt=`${nmS(quizPayload.root)} ${quizPayload.template.name}`;
     else ansTxt=`${NN[quizAns]} (cuerda ${OPEN.length-quizPayload.s}ª, traste ${quizPayload.f})`;
     fb.innerHTML=`<span style="color:${ok?"var(--teal)":"var(--red)"}">${ok?"✓ Correcto":"✗ No"} — era <b>${ansTxt}</b></span>`;
 
@@ -3305,7 +3489,7 @@ function renderAll(){
   if(tab==="arpegios")renderModoGated("arpegios",renderArpeggios,"Arpegios","Los arpegios aquí son los de las triadas armonizadas grado a grado, igual que en Triadas.");
   if(tab==="licks")renderLicksTab();
   if(tab==="caged")renderCondGated("caged",renderCaged,"CAGED","Las 5 formas de acorde abierto (C-A-G-E-D) son una tradición específica de la guitarra de 6 cuerdas con afinación estándar. No existe un equivalente directo en "+INSTRUMENTS[instrumentKey].name.toLowerCase()+" — cambia a Guitarra arriba para usar esta pestaña.",()=>INSTRUMENTS[instrumentKey].hasCaged,"instrument-gate");
-  if(tab==="finder"){renderBuilder();renderFinder();}
+  if(tab==="finder"){renderBuilder();renderFinder();renderDimSym();}
   if(tab==="prog")renderProg();
   if(tab==="blues")renderBlues();
   if(tab==="practica")renderQuiz();
@@ -3459,6 +3643,11 @@ document.getElementById("chkBluesLoop").onchange=e=>{bluesLoop=e.target.checked;
 document.getElementById("btnBluesPlay").onclick=playBlues;
 document.getElementById("selBuildRoot").onchange=e=>{buildRoot=+e.target.value;renderBuilder();};
 document.getElementById("selBuildType").onchange=e=>{buildQ=e.target.value;renderBuilder();};
+document.getElementById("selDimRoot").onchange=e=>{dimRoot=+e.target.value;renderDimSym();};
+document.getElementById("btnDimPlay").onclick=()=>{
+  try{const c=ctx();let t0=c.currentTime;dimShapes.forEach(sh=>{sh.strs.forEach((s,i)=>pluck(OPEN[s]+sh.frets[i],t0+i*0.05,1.0));t0+=1.0;});}
+  catch(e){console.warn("Audio no disponible:",e);}
+};
 document.getElementById("btnBuildPlay").onclick=()=>{try{strum(chordMidis(buildRoot,tplByQ(buildQ)));}catch(e){console.warn("Audio no disponible:",e);}};
 document.getElementById("segChordProgMode").querySelectorAll("button").forEach(b=>b.onclick=()=>{
   chordProgMode=b.dataset.v;
