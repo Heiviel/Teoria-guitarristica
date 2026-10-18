@@ -402,7 +402,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
     <div class="card">
       <h2>Acordes de séptima</h2>
       <span class="pill" id="sevModePill" style="margin-bottom:10px;display:inline-block"></span>
-      <p>Apila una tercera más sobre la triada y obtienes una <b>séptima</b> — cuatro notas, mucho más color armónico (jazz, funk, soul). El grado y el modo siguen imponiendo la calidad exacta: no eliges, se deduce.</p>
+      <p>Apila una tercera más sobre la triada y obtienes una <b>séptima</b> — cuatro notas, mucho más color armónico (jazz, funk, soul). El grado y el modo siguen imponiendo la calidad exacta: no eliges, se deduce. Las digitaciones son <b>drop 2</b>, la forma habitual en guitarra para acordes de 4 notas: caben en una mano, sin estirar los dedos.</p>
       <div style="overflow-x:auto"><table id="sevTable"></table></div>
       <p class="hint">💡 Pulsa una fila para escucharla.</p>
     </div>
@@ -824,7 +824,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   <section id="tab-ayuda" hidden>
     <div class="card">
       <h2>Cómo usar la app</h2>
-      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota. Los títulos de cada módulo de esta ayuda son enlaces: púlsalos para ir directos a él. En el móvil, el menú de pestañas se despliega con el botón de arriba y se vuelve a plegar al elegir.</p>
+      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota. Los títulos de cada módulo de esta ayuda son enlaces: púlsalos para ir directos a él. En el móvil, el menú de pestañas se despliega con el botón de arriba y se vuelve a plegar al elegir. Todas las digitaciones están pensadas para una mano real: como mucho 3 trastes de estiramiento (4 solo a partir del traste 7, donde los trastes son más estrechos) y nunca más de 4 dedos. Si una forma no cabe en la mano, la app lo dice en vez de enseñártela.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('intervalos')" style="margin-top:0">🎵 Intervalos</h3>
       <p>La distancia entre dos notas. Pulsa una tarjeta para oírla y verla en el mástil. <b>"Ver todos a la vez"</b> pinta los 12 intervalos posibles desde la tónica. Abajo, la tabla de <b>inversión de intervalos</b> (qué pasa si subes la nota grave una 8ª) con diagrama y sonido.</p>
@@ -842,10 +842,10 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Los 7 acordes (triadas) que salen de armonizar la escala activa, con su calidad (mayor/menor/dim). Pulsa una fila para oírla, o una progresión típica (I-IV-V, ii-V-I...). Debajo, la digitación real en el mástil de cada uno.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('septimas')" style="margin-top:0">7️⃣ Acordes de 7ª</h3>
-      <p>Como Armonización pero con acordes de 4 notas (maj7, m7, 7, m7♭5...). Elige juego de cuerdas e inversión para ver la digitación real, o "todas las posiciones" para las 4 inversiones a la vez. Abajo, progresiones avanzadas (sustitución de tritono, varios turnarounds al ii y un blues de jazz) con movimiento de dedos mínimo entre acordes.</p>
+      <p>Como Armonización pero con acordes de 4 notas (maj7, m7, 7, m7♭5...). Las formas son "drop 2" (las habituales en guitarra, tocables sin estirar la mano). Elige juego de cuerdas y posición para ver la digitación real, o "todas las posiciones" para las 4 a la vez. Abajo, progresiones avanzadas (sustitución de tritono, varios turnarounds al ii y un blues de jazz) con movimiento de dedos mínimo entre acordes.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('cuartas')" style="margin-top:0">🎸 Acordes por cuartas</h3>
-      <p>Apilar 4ªs en vez de 3ªs — sonido abierto y "flotante" (jazz modal, So What). Elige 3 o 4 notas, juego de cuerdas y posición (rota qué nota queda abajo, no es una inversión clásica). Los números 1-4 marcan el orden en la pila, no grado ni R/3/5.</p>
+      <p>Apilar 4ªs en vez de 3ªs — sonido abierto y "flotante" (jazz modal, So What). Elige 3 o 4 notas, juego de cuerdas y posición (rota qué nota queda abajo, no es una inversión clásica). Los números 1-4 marcan el orden en la pila, no grado ni R/3/5. Con 4 notas hay posiciones que no caben en una mano: la app te avisa de cuántas.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('triadas')" style="margin-top:0">🔺 Triadas e inversiones</h3>
       <p>Cada triada de la escala en un juego de cuerdas concreto, con sus 3 inversiones (fundamental/1ª/2ª). Marca "ver las 3 a la vez" para compararlas.</p>
@@ -961,11 +961,14 @@ function rebuildStringSets(){
 }
 function stringLabel(sIdx){return `${OPEN.length-sIdx}ª ${NN[OPEN[sIdx]%12]}`;}
 const INVS=[{n:"Fundamental",o:[0,1,2],r:["R","3","5"]},{n:"1ª inversión",o:[1,2,0],r:["3","5","R"]},{n:"2ª inversión",o:[2,0,1],r:["5","R","3"]}];
+/* Voicings "drop 2": la forma habitual en guitarra para acordes de 4 notas. Se baja una octava la segunda
+   nota desde arriba, y así caben en 3 trastes. Las apiladas en terceras seguidas (R-3-5-7) exigen estirar
+   4-6 trastes casi siempre, así que no se usan. */
 const INVS7=[
- {n:"Fundamental",o:[0,1,2,3],r:["R","3","5","7"]},
- {n:"1ª inversión",o:[1,2,3,0],r:["3","5","7","R"]},
- {n:"2ª inversión",o:[2,3,0,1],r:["5","7","R","3"]},
- {n:"3ª inversión",o:[3,0,1,2],r:["7","R","3","5"]}
+ {n:"Drop 2 · fundamental",o:[2,0,1,3],r:["5","R","3","7"]},
+ {n:"Drop 2 · 1ª inversión",o:[3,1,2,0],r:["7","3","5","R"]},
+ {n:"Drop 2 · 2ª inversión",o:[0,2,3,1],r:["R","5","7","3"]},
+ {n:"Drop 2 · 3ª inversión",o:[1,3,0,2],r:["3","7","R","5"]}
 ];
 const INTERVALS=[
  {s:0,n:"Unísono",d:"La misma nota."},
@@ -1095,7 +1098,30 @@ function findShapeN(strIdxs,pcsOrdered,spanMax,startBase){
   } return null;
 }
 
-function findShape(strIdxs,pcsOrdered){return findShapeN(strIdxs,pcsOrdered,4);}
+/* Digitación que cabe en una mano: máx. 3 trastes de estiramiento (un dedo por traste) y, solo si no hay
+   otra, 4 trastes pero a partir del traste 7, donde los trastes son más estrechos. Las notas deben subir de
+   grave a agudo (salvo en afinaciones reentrantes) y no pueden pedir más de 4 dedos. El estiramiento de una
+   forma depende solo de las cuerdas y del orden de las notas, no de dónde esté (se repite cada 12 trastes),
+   así que si ese tipo de forma no cabe en una mano devuelve null en vez de inventarse algo imposible. */
+function findComfyShape(strs,order){
+  const asc=OPEN.every((o,i)=>i===0||o>OPEN[i-1]);
+  let best=null,b=0;const seen=new Set();
+  while(b<=FRETS-4){
+    const fr=findShapeN(strs,order,4,b);
+    if(!fr)break;
+    const key=fr.join(",");
+    if(!seen.has(key)){
+      seen.add(key);
+      const m=strs.map((s,i)=>OPEN[s]+fr[i]);
+      const f=fr.filter(x=>x>0),minF=f.length?Math.min(...f):0,span=f.length?Math.max(...f)-minF:0;
+      const ok=(!asc||m.every((x,i)=>i===0||x>m[i-1]))&&fingerCount(fr)<=4&&(span<=3||(span===4&&minF>=7));
+      if(ok){const score=(span>3?100:0)+minF;if(!best||score<best.score)best={fr,score};}
+    }
+    b=Math.min(...fr)+1;
+  }
+  return best?best.fr:null;
+}
+function findShape(strIdxs,pcsOrdered){return findComfyShape(strIdxs,pcsOrdered);}
 /* Fija una cuerda a un traste exacto y busca las demás notas alrededor (arriba Y abajo) — necesario
    para el ciclo de cuartas, donde la nueva fundamental cae en un traste concreto, no en el más grave. */
 function findShapeFixed(strIdxs,pcsOrdered,fixedIdx,fixedFret,spanBefore,spanAfter){
@@ -1727,7 +1753,7 @@ function renderSeventh(){
     b.innerHTML=`<div class="rom">${seventhRoman(i)}</div><div class="q">${seventhChordName(pcs[0],info.sym)}</div>`;
     b.onclick=()=>{sevDeg=i;renderSeventh();
       const inv=INVS7[sevInvIdx];
-      const sh=findShapeN(SETS7[sevSetIdx].i,inv.o.map(oi=>pcs[oi]),6);
+      const sh=findComfyShape(SETS7[sevSetIdx].i,inv.o.map(oi=>pcs[oi]));
       if(sh){
         flashShapePositions("fbSev",SETS7[sevSetIdx].i.map((s,k)=>[{s,f:sh[k]}]),.06);
         try{strum(SETS7[sevSetIdx].i.map((s,k)=>OPEN[s]+sh[k]));}catch(e){console.warn("Audio no disponible:",e);}
@@ -1744,24 +1770,25 @@ function renderSeventh(){
   document.getElementById("sevAllGrid").hidden=!sevFull;
   if(sevFull){
     const wrap=document.getElementById("sevAllGrid");
+    let sevMissing=0;
     wrap.innerHTML=INVS7.map(inv=>{
-      const sh=findShapeN(set.i,inv.o.map(oi=>pcs[oi]),6);
-      if(!sh)return "";
+      const sh=findComfyShape(set.i,inv.o.map(oi=>pcs[oi]));
+      if(!sh){sevMissing++;return "";}
       const win={start:Math.min(...sh),end:Math.max(...sh)};
       const rows=new Array(OPEN.length).fill(null);
       set.i.forEach((sIdx,k)=>{const pc=(OPEN[sIdx]+sh[k])%12;rows[sIdx]={notes:[{fret:sh[k],label:showNames?NN[pc].replace("#","♯"):inv.r[k],color:roleColor[inv.r[k]],isRoot:inv.r[k]==="R"}]};});
       return miniFretboardHTML(inv.n,win,rows,true);
     }).join("");
     wrap.querySelectorAll(".mdot").forEach(d=>d.onclick=()=>{try{pluck(OPEN[+d.dataset.s]+ +d.dataset.f,ctx().currentTime);}catch(e){}});
-    infoEl.textContent=`${seventhChordName(pcs[0],info.sym)} · ${set.l} · las 4 inversiones (fundamental, 1ª, 2ª y 3ª)`;
+    infoEl.textContent=`${seventhChordName(pcs[0],info.sym)} · ${set.l} · las 4 posiciones drop 2 (cambia qué nota queda en el bajo)`+(sevMissing?` · ${sevMissing} no cabe${sevMissing>1?"n":""} en una mano con estas cuerdas`:"");
   } else {
     const inv=INVS7[sevInvIdx];
-    const sh=findShapeN(set.i,inv.o.map(oi=>pcs[oi]),6);
+    const sh=findComfyShape(set.i,inv.o.map(oi=>pcs[oi]));
     const el=document.getElementById("fbSev");const geo=fbBase(el);
     if(sh)set.i.forEach((s,k)=>{const pc=(OPEN[s]+sh[k])%12;const lbl=showNames?NN[pc].replace("#","♯"):inv.r[k];addDot(el,geo,s,sh[k],lbl,roleColor[inv.r[k]],inv.r[k]==="R",false,()=>pluck(OPEN[s]+sh[k],ctx().currentTime));});
     infoEl.textContent=sh
       ? `${seventhChordName(pcs[0],info.sym)} · ${inv.n} · ${set.l} · trastes ${sh.join("-")} · bajo en ${inv.r[0]==="R"?"la fundamental":inv.r[0]==="3"?"la 3ª":inv.r[0]==="5"?"la 5ª":"la 7ª"}`
-      : `No se encontró una digitación cómoda en ${set.l.toLowerCase()} — prueba otro juego de cuerdas o inversión.`;
+      : `Esta posición no cabe en una mano con ${set.l.toLowerCase()} (habría que estirar demasiado) — prueba otro juego de cuerdas o posición.`;
   }
 
   const pr7=document.getElementById("sevProgRow");pr7.innerHTML="";
@@ -1815,7 +1842,7 @@ function renderQuartal(){
     b.onclick=()=>{quartDeg=i;renderQuartal();
       const inv=INV_ARR[quartInvIdx];
       const set=SET_ARR[quartSetIdx];
-      const sh=findShapeN(set.i,inv.o.map(oi=>pcs[oi]),6);
+      const sh=findComfyShape(set.i,inv.o.map(oi=>pcs[oi]));
       if(sh){
         flashShapePositions("fbQuart",set.i.map((s,k)=>[{s,f:sh[k]}]),.06);
         try{strum(set.i.map((s,k)=>OPEN[s]+sh[k]));}catch(e){console.warn("Audio no disponible:",e);}
@@ -1833,9 +1860,10 @@ function renderQuartal(){
   const ivFromRoot=roleIdx=>{if(roleIdx===0)return "R";const iv=(pcs[roleIdx]-pcs[0]+12)%12;return IV_ABR[iv];};
   if(quartFull){
     const wrap=document.getElementById("quartAllGrid");
+    let quartMissing=0;
     wrap.innerHTML=INV_ARR.map(inv=>{
-      const sh=findShapeN(set.i,inv.o.map(oi=>pcs[oi]),6);
-      if(!sh)return "";
+      const sh=findComfyShape(set.i,inv.o.map(oi=>pcs[oi]));
+      if(!sh){quartMissing++;return "";}
       const win={start:Math.min(...sh),end:Math.max(...sh)};
       const rows=new Array(OPEN.length).fill(null);
       set.i.forEach((sIdx,k)=>{const roleIdx=inv.o[k];const pc=(OPEN[sIdx]+sh[k])%12;
@@ -1843,16 +1871,16 @@ function renderQuartal(){
       return miniFretboardHTML(`${inv.n} · ${intervalString(set.i,sh)}`,win,rows,true);
     }).join("");
     wrap.querySelectorAll(".mdot").forEach(d=>d.onclick=()=>{try{pluck(OPEN[+d.dataset.s]+ +d.dataset.f,ctx().currentTime);}catch(e){}});
-    infoEl.textContent=`${pcs.map(p=>NN[p]).join("-")} · ${set.l} · las ${INV_ARR.length} posiciones (rotando qué nota va abajo)`;
+    infoEl.textContent=`${pcs.map(p=>NN[p]).join("-")} · ${set.l} · las ${INV_ARR.length} posiciones (rotando qué nota va abajo)`+(quartMissing?` · ${quartMissing} no cabe${quartMissing>1?"n":""} en una mano con estas cuerdas`:"");
   } else {
     const inv=INV_ARR[quartInvIdx];
-    const sh=findShapeN(set.i,inv.o.map(oi=>pcs[oi]),6);
+    const sh=findComfyShape(set.i,inv.o.map(oi=>pcs[oi]));
     const el=document.getElementById("fbQuart");const geo=fbBase(el);
     if(sh)set.i.forEach((s,k)=>{const roleIdx=inv.o[k];const pc=(OPEN[s]+sh[k])%12;
       addDot(el,geo,s,sh[k],roleLabel(ivFromRoot(roleIdx),pc),QCOLOR[roleIdx],roleIdx===0,false,()=>pluck(OPEN[s]+sh[k],ctx().currentTime));});
     infoEl.textContent=sh
       ? `${pcs.map(p=>NN[p]).join("-")} · ${inv.n} · ${set.l} · trastes ${sh.join("-")} · intervalos (grave→agudo): ${intervalString(set.i,sh)}`
-      : `No se encontró una digitación cómoda en ${set.l.toLowerCase()} — prueba otro juego de cuerdas o posición.`;
+      : `Esta posición no cabe en una mano con ${set.l.toLowerCase()} (habría que estirar demasiado) — prueba otro juego de cuerdas o posición.`;
   }
 }
 /* Progresiones avanzadas con acordes de séptima reales (no dependen del modo activo, tónica = root actual) */
@@ -1871,7 +1899,7 @@ function bestVoicing(set,pcs,prevAvg){
   let best=null,bestDist=Infinity;
   INVS7.forEach(inv=>{
     const ordered=inv.o.map(oi=>pcs[oi]);
-    const sh=findShapeN(set.i,ordered,6);
+    const sh=findComfyShape(set.i,ordered);
     if(!sh)return;
     const avg=sh.reduce((a,b)=>a+b,0)/sh.length;
     const dist=prevAvg===null?avg:Math.abs(avg-prevAvg);
@@ -2003,8 +2031,9 @@ function arpShapeFor(d){
   if(arpFull)return null;
   if(!arpSeven)return shapeFor(d,arpSetIdx,0);
   const set=SETS7[arpSet7];if(!set)return null;
-  const fr=findShapeN(set.i,seventhPCs(d),6);
-  return fr?{strs:set.i,frets:fr,roles:ARP7_ROLES}:null;
+  const p=seventhPCs(d),o=[2,0,1,3];
+  const fr=findComfyShape(set.i,o.map(i=>p[i]));
+  return fr?{strs:set.i,frets:fr,roles:o.map(i=>ARP7_ROLES[i])}:null;
 }
 function arpChordName(d){
   if(arpSeven){const p=seventhPCs(d);return seventhChordName(p[0],seventhInfo(d).sym);}
@@ -2013,7 +2042,8 @@ function arpChordName(d){
 function playArpeggioPcs(pcs,sh){
   const r=pcs[0],rel=pcs.map(p=>(p-r+12)%12),n=pcs.length;
   if(sh){
-    const idxs=[...Array(n).keys()].concat([0]);
+    const tones=ARP7_ROLES.slice(0,n);
+    const idxs=tones.map(t=>sh.roles.indexOf(t)).concat([sh.roles.indexOf("R")]);
     flashShapePositions("fbArp",idxs.map(i=>[{s:sh.strs[i],f:sh.frets[i]}]),.22);
   } else {
     flashPitchClasses("fbArp",pcs.concat([pcs[0]]),.22);
@@ -3160,7 +3190,7 @@ function findChordFingerings(rootPc,tpl){
         if(playedIdx.length<3)return;
         const fretted=playedIdx.map(i=>combo[i]).filter(f=>f!==0);
         const span=fretted.length?Math.max(...fretted)-Math.min(...fretted):0;
-        if(span>spanLimit)return;
+        if(span>3&&!(span===4&&Math.min(...fretted)>=7))return;
         const fingers=fingerCount(combo);
         if(fingers>4)return;
         const relSet=new Set(playedIdx.map(i=>((OPEN[i]+combo[i])%12-rootPc+12)%12));
