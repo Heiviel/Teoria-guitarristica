@@ -429,7 +429,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
     </div>
     <div class="card">
       <h3 style="margin-top:0">Progresiones avanzadas</h3>
-      <p class="muted" style="font-size:13px">ii-V-I, sustitución de tritono y turnaround — con acordes de séptima reales, sobre la tónica actual (usa el juego de cuerdas de arriba).</p>
+      <p class="muted" style="font-size:13px">ii-V-I, sustitución de tritono, turnarounds al ii y un blues de jazz — con acordes de séptima reales, sobre la tónica actual (usa el juego de cuerdas de arriba).</p>
       <div class="progrow" id="sevProgRow"></div>
       <p class="hint" id="sevProgHint"></p>
     </div>
@@ -824,13 +824,13 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   <section id="tab-ayuda" hidden>
     <div class="card">
       <h2>Cómo usar la app</h2>
-      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota.</p>
+      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota. Los títulos de cada módulo de esta ayuda son enlaces: púlsalos para ir directos a él. En el móvil, el menú de pestañas se despliega con el botón de arriba y se vuelve a plegar al elegir.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('intervalos')" style="margin-top:0">🎵 Intervalos</h3>
       <p>La distancia entre dos notas. Pulsa una tarjeta para oírla y verla en el mástil. <b>"Ver todos a la vez"</b> pinta los 12 intervalos posibles desde la tónica. Abajo, la tabla de <b>inversión de intervalos</b> (qué pasa si subes la nota grave una 8ª) con diagrama y sonido.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('escala')" style="margin-top:0">🎼 Escala y grados</h3>
-      <p>Todas las notas de la escala/modo elegido, por todo el mástil. Filtra por grado para aislar un color. Debajo, <b>patrones/posiciones</b>: la misma escala troceada en cajas que se tocan sin mover la mano.</p>
+      <p>Todas las notas de la escala/modo elegido, por todo el mástil. Filtra por grado para aislar un color. Debajo, <b>patrones/posiciones</b>: la misma escala troceada en cajas que se tocan sin mover la mano. El selector de arriba, además de los 7 modos, incluye la menor armónica y melódica, las pentatónicas, el blues y las escalas disminuidas (tono–semitono y semitono–tono), que se repiten cada 3 trastes.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('modos')" style="margin-top:0">🎨 Modos</h3>
       <p>Los 7 modos de la escala mayor. Pulsa uno para activarlo en toda la app y compararlo con la mayor. La nota (o notas) que lo diferencia de la mayor pulsa con un anillo en el mástil y en los patrones — es lo que le da su sabor propio. Al final, una lista con el acorde que pide cada modo (Dórico → m7, Mixolidio → dominante...) que puedes oír tocando el acorde y la escala encima.</p>
@@ -842,7 +842,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Los 7 acordes (triadas) que salen de armonizar la escala activa, con su calidad (mayor/menor/dim). Pulsa una fila para oírla, o una progresión típica (I-IV-V, ii-V-I...). Debajo, la digitación real en el mástil de cada uno.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('septimas')" style="margin-top:0">7️⃣ Acordes de 7ª</h3>
-      <p>Como Armonización pero con acordes de 4 notas (maj7, m7, 7, m7♭5...). Elige juego de cuerdas e inversión para ver la digitación real, o "todas las posiciones" para las 4 inversiones a la vez. Abajo, progresiones avanzadas (sustitución de tritono, turnaround) con movimiento de dedos mínimo entre acordes.</p>
+      <p>Como Armonización pero con acordes de 4 notas (maj7, m7, 7, m7♭5...). Elige juego de cuerdas e inversión para ver la digitación real, o "todas las posiciones" para las 4 inversiones a la vez. Abajo, progresiones avanzadas (sustitución de tritono, varios turnarounds al ii y un blues de jazz) con movimiento de dedos mínimo entre acordes.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('cuartas')" style="margin-top:0">🎸 Acordes por cuartas</h3>
       <p>Apilar 4ªs en vez de 3ªs — sonido abierto y "flotante" (jazz modal, So What). Elige 3 o 4 notas, juego de cuerdas y posición (rota qué nota queda abajo, no es una inversión clásica). Los números 1-4 marcan el orden en la pila, no grado ni R/3/5.</p>
@@ -860,7 +860,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <p>Las 5 formas de acorde abierto (C-A-G-E-D) movidas con cejilla para tocar el acorde de la tónica actual en 5 sitios distintos del mástil.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('finder')" style="margin-top:0">📖 Diccionario de acordes</h3>
-      <p>Dos herramientas en una. <b>Construir</b>: eliges tónica y tipo (tríadas, sextas, séptimas, novenas, 11ª, 13ª, alterados...) y ves su fórmula y varias digitaciones por el mástil. <b>Identificar</b>: pones tú las notas (una por cuerda) y la app dice qué acorde es, con notación de barra (Do/Mi), si es fundamental o inversión, y otras formas de leer las mismas notas. También explica por qué el <b>dim7 es simétrico</b> (se repite cada 3 trastes y tiene cuatro nombres). Al final, <b>Del nombre a la digitación</b>: escribes una progresión y te doy posiciones abiertas o la triada con sus inversiones, dentro de lo que da una mano.</p>
+      <p>Dos herramientas en una. <b>Construir</b>: eliges tónica y tipo (tríadas, sextas, séptimas, novenas, 11ª, 13ª, alterados...) y ves su fórmula y varias digitaciones por el mástil. <b>Identificar</b>: pones tú las notas (una por cuerda) y la app dice qué acorde es, con notación de barra (Do/Mi), si es fundamental o inversión, y otras formas de leer las mismas notas. Si tu digitación no es "de libro" (le falta la 5ª o lleva una nota añadida) te da la lectura más cercana y marca en rojo la nota que se sale de la fórmula; con Rasgueo y Arpegio la oyes entera. También explica por qué el <b>dim7 es simétrico</b> (se repite cada 3 trastes y tiene cuatro nombres). Al final, <b>Del nombre a la digitación</b>: escribes una progresión y te doy posiciones abiertas o la triada con sus inversiones, dentro de lo que da una mano.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('prog')" style="margin-top:0">🧭 Analizar progresión</h3>
       <p>Escribes los acordes de una canción (Sol Lam Rem Do, o G Am Dm C) y la app deduce el tono, pone el número romano de cada acorde, marca los que se salen de la tonalidad (y si son dominantes secundarios o sustituciones de tritono) y dice qué escala tocar encima. Detecta también el cambio de tonalidad a mitad de canción, el blues y la menor armónica. Puedes transportar la progresión a otro tono y ver qué cejilla (capo) necesitarías.</p>
