@@ -187,6 +187,14 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   .tabs.expanded{display:flex}
   .tabs button{width:100%;text-align:left;border-radius:0;border-bottom:1px solid var(--line)}
   .tabs button:last-child{border-bottom:none}
+  .topbar .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .topbar .controls>*{min-width:0;width:100%}
+  .topbar .controls select{text-overflow:ellipsis}
+  .topbar .controls .btn{padding:8px 6px;font-size:13px}
+  #selInstrument{order:5}
+  #selNoteSystem{order:6}
+  #selTuning{order:7;grid-column:1/-1}
+  #selAccidental{order:8}
   .dedic-center{order:1}
   .dedic-track{order:2}
   .dedic-album{order:3}
@@ -207,9 +215,14 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
     <button class="btn" id="btnPlayScale">▶ Escuchar escala</button>
     <button class="btn" id="btnNamesGlobal">Ver: Grados/Roles 🔁</button>
     <select id="selInstrument"></select>
+    <select id="selTuning" title="Afinación"></select>
     <select id="selNoteSystem">
       <option value="latin">Do Re Mi</option>
       <option value="en">C D E</option>
+    </select>
+    <select id="selAccidental" title="Cómo se escriben las notas alteradas">
+      <option value="sharp">♯ Sostenidos</option>
+      <option value="flat">♭ Bemoles</option>
     </select>
   </div>
 
@@ -218,6 +231,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   </button>
   <nav class="tabs" id="tabs">
     <button data-t="intervalos" class="on">Intervalos</button>
+    <button data-t="afinaciones">Afinaciones y drops</button>
     <button data-t="escala">Escala y grados</button>
     <button data-t="modos">Modos</button>
     <button data-t="circulo">Círculo de quintas</button>
@@ -242,7 +256,7 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
       <h2>Los intervalos: el alfabeto</h2>
       <p>Un intervalo es la distancia entre dos notas, medida en semitonos (1 traste = 1 semitono). Todo lo demás —escalas, acordes, melodías— se construye apilando intervalos. Pulsa cada tarjeta para <b>escucharlo desde la tónica actual</b> y verlo en el mástil.</p>
       <div class="ivgrid" id="ivGrid" style="margin-top:12px"></div>
-      <p class="hint">💡 En la guitarra: subir 1 cuerda (afinación estándar) = +5 semitonos (4ª justa), excepto de 3ª a 2ª cuerda = +4 (3ª mayor). Por eso las formas cambian al cruzar la 2ª cuerda.</p>
+      <p class="hint" id="ivStringsHint">💡 En la guitarra: subir 1 cuerda (afinación estándar) = +5 semitonos (4ª justa), excepto de 3ª a 2ª cuerda = +4 (3ª mayor). Por eso las formas cambian al cruzar la 2ª cuerda.</p>
     </div>
     <div class="card">
       <h3 id="ivFbTitle">Intervalo en el mástil</h3>
@@ -274,6 +288,39 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   </section>
 
   <!-- ===================== ESCALA ===================== -->
+  <!-- ===================== AFINACIONES Y DROPS ===================== -->
+  <section id="tab-afinaciones" hidden>
+    <div class="card">
+      <h2>Afinaciones y drops</h2>
+      <p>Afinar de otra forma cambia qué nota suena en cada traste y, con ello, las formas de los acordes. Elige una afinación (también arriba, junto al instrumento): <b>todos los mástiles de la app</b> pasan a usarla y se recalculan las digitaciones. Con el selector <b>♯ / ♭</b> de arriba eliges cómo se escriben las notas alteradas.</p>
+      <div id="tuningGroups"></div>
+    </div>
+    <div class="card">
+      <h3 id="tuningTitle" style="margin-top:0"></h3>
+      <p id="tuningDesc"></p>
+      <div style="overflow-x:auto"><table id="tuningTable"></table></div>
+      <div class="controls" style="margin-top:10px"><button class="btn-gold" id="btnTuningPlay">▶ Escuchar las cuerdas al aire</button></div>
+      <h3>Qué cambia con esta afinación</h3>
+      <ul id="tuningChanges" style="margin:6px 0 0 18px;font-size:14px;line-height:1.55"></ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Las notas del mástil en esta afinación</h3>
+      <div class="controls">
+        <div class="seg" id="segTuneBoard">
+          <button data-v="all" class="on">Todas las notas</button>
+          <button data-v="nat">Solo naturales</button>
+        </div>
+      </div>
+      <div class="fb-scroll"><div class="fretboard" id="fbTunings"></div></div>
+      <div class="legend">
+        <span><span class="sw" style="background:#4FA8A0"></span>Nota natural</span>
+        <span><span class="sw" style="background:#7C86A6"></span>Nota alterada (♯/♭)</span>
+        <span><span class="sw" style="background:#C9A227;border:2px solid #fff"></span>Tónica elegida arriba</span>
+      </div>
+      <p class="hint">💡 Pulsa cualquier nota para oírla. Cambia entre sostenidos y bemoles con el selector de arriba: son la misma nota con otro nombre.</p>
+    </div>
+  </section>
+
   <section id="tab-escala" hidden>
     <div class="card">
       <h2 id="scaleTitle">La escala</h2>
@@ -824,10 +871,13 @@ input.txt{background:var(--surface2);color:var(--ivory);border:1px solid var(--l
   <section id="tab-ayuda" hidden>
     <div class="card">
       <h2>Cómo usar la app</h2>
-      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota. Los títulos de cada módulo de esta ayuda son enlaces: púlsalos para ir directos a él. En el móvil, el menú de pestañas se despliega con el botón de arriba y se vuelve a plegar al elegir. Todas las digitaciones están pensadas para una mano real: como mucho 3 trastes de estiramiento (4 solo a partir del traste 7, donde los trastes son más estrechos) y nunca más de 4 dedos. Si una forma no cabe en la mano, la app lo dice en vez de enseñártela.</p>
+      <p>Arriba del todo eliges <b>tónica</b> y <b>escala/modo</b> — eso controla toda la app. El botón <b>"Ver: Grados/Roles ↔ Notas"</b> conmuta, en cualquier pestaña, entre ver números (grado o rol del acorde: R/3/5/7) o el nombre real de la nota. Los títulos de cada módulo de esta ayuda son enlaces: púlsalos para ir directos a él. En el móvil, el menú de pestañas se despliega con el botón de arriba y se vuelve a plegar al elegir. Junto al instrumento eliges la <b>afinación</b> (estándar, bajadas, drops, abiertas...) y con <b>♯ / ♭</b> cómo se escriben las notas alteradas: todos los mástiles de la app se adaptan. Todas las digitaciones están pensadas para una mano real: como mucho 3 trastes de estiramiento (4 solo a partir del traste 7, donde los trastes son más estrechos) y nunca más de 4 dedos. Si una forma no cabe en la mano, la app lo dice en vez de enseñártela.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('intervalos')" style="margin-top:0">🎵 Intervalos</h3>
       <p>La distancia entre dos notas. Pulsa una tarjeta para oírla y verla en el mástil. <b>"Ver todos a la vez"</b> pinta los 12 intervalos posibles desde la tónica. Abajo, la tabla de <b>inversión de intervalos</b> (qué pasa si subes la nota grave una 8ª) con diagrama y sonido.</p>
+    </div>
+    <div class="card"><h3 class="help-jump" onclick="goToTab('afinaciones')" style="margin-top:0">🎛️ Afinaciones y drops</h3>
+      <p>Cambia la afinación del instrumento (medio tono abajo, Drop D, abiertas, DADGAD, cuartas...) y <b>todos los mástiles de la app se recalculan</b>: las notas de cada traste, las formas de los acordes, los arpegios... Muestra cada cuerda con su frecuencia y cuánto cambia respecto a la estándar, qué trucos aparecen (como el power chord con un dedo en los drops) y un mástil con el nombre de todas las notas. Funciona también con bajo y ukelele. Con el selector ♯ / ♭ de la barra superior eliges cómo se escriben las alteradas.</p>
     </div>
     <div class="card"><h3 class="help-jump" onclick="goToTab('escala')" style="margin-top:0">🎼 Escala y grados</h3>
       <p>Todas las notas de la escala/modo elegido, por todo el mástil. Filtra por grado para aislar un color. Debajo, <b>patrones/posiciones</b>: la misma escala troceada en cajas que se tocan sin mover la mano. El selector de arriba, además de los 7 modos, incluye la menor armónica y melódica, las pentatónicas, el blues y las escalas disminuidas (tono–semitono y semitono–tono), que se repiten cada 3 trastes.</p>
@@ -910,6 +960,10 @@ document.addEventListener("touchstart",function(){},{passive:true});
 const NN_LATIN=["Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"];
 const NN_EN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 let noteSystem="latin";
+const NN_LATIN_B=["Do","Re♭","Re","Mi♭","Mi","Fa","Sol♭","Sol","La♭","La","Si♭","Si"];
+const NN_EN_B=["C","D♭","D","E♭","E","F","G♭","G","A♭","A","B♭","B"];
+let accidental="sharp";
+function rebuildNN(){NN=(noteSystem==="en"?(accidental==="flat"?NN_EN_B:NN_EN):(accidental==="flat"?NN_LATIN_B:NN_LATIN)).slice();}
 let NN=NN_LATIN.slice();
 const MAJ=[0,2,4,5,7,9,11];
 const MODES=[
@@ -952,6 +1006,59 @@ const INSTRUMENTS={
   bass:{name:"Bajo (4 cuerdas)",open:[28,33,38,43],hasCaged:false},
   ukulele:{name:"Ukelele (afinación reentrante)",open:[67,60,64,69],hasCaged:false}
 };
+/* ---- Afinaciones: solo cambia OPEN (las notas al aire); el resto del motor se recalcula solo.
+   g = grupo, n = nombre ({r} se sustituye por la nota raíz con la notación elegida), rp = nota raíz
+   (por defecto la cuerda más grave), s = frase corta, d = explicación, open = MIDI de cada cuerda. ---- */
+const TUNINGS={
+ guitar:[
+  {id:"std",g:"Estándar y bajadas",n:"Estándar",open:[40,45,50,55,59,64],s:"La referencia: cuerdas a 4ª, con una 3ª mayor entre la 3ª y la 2ª.",d:"Es la afinación con la que se enseñan casi todos los acordes y escalas: cada cuerda está a una 4ª justa de la anterior, salvo la 3ª a la 2ª, que está a una 3ª mayor. Los acordes abiertos clásicos y la pestaña CAGED están pensados para ella."},
+  {id:"half",g:"Estándar y bajadas",n:"Medio tono abajo",open:[39,44,49,54,58,63],s:"Todas las cuerdas un semitono más graves.",d:"Las seis cuerdas bajan un semitono. Los trastes y las formas son idénticos a los de la estándar, pero todo suena un semitono más grave: más cómoda para cantar y con cuerdas algo más blandas. Muy usada en rock y blues."},
+  {id:"whole",g:"Estándar y bajadas",n:"Un tono abajo",open:[38,43,48,53,57,62],s:"Todo dos semitonos más grave.",d:"Todas las cuerdas bajan un tono. Mismas formas que en la estándar, con un sonido más grave y pesado propio del hard rock y el metal clásico."},
+  {id:"tone15",g:"Estándar y bajadas",n:"Tono y medio abajo",open:[37,42,47,52,56,61],s:"Todo tres semitonos más grave.",d:"Bajada de tres semitonos: sonido oscuro y muy pesado. Las cuerdas quedan flojas, por eso se suele subir el grosor del juego."},
+  {id:"two",g:"Estándar y bajadas",n:"Dos tonos abajo",open:[36,41,46,51,55,60],s:"Todo cuatro semitonos más grave.",d:"Bajada de cuatro semitonos, ya en terreno de metal grave. Como en las demás bajadas, las formas no cambian: solo el sonido."},
+  {id:"bari",g:"Estándar y bajadas",n:"Barítono (una 4ª abajo)",open:[35,40,45,50,54,59],s:"Todo cinco semitonos más grave: una 4ª justa por debajo.",d:"Toda la guitarra una 4ª justa más grave, el registro de la guitarra barítona. Con las cuerdas habituales quedarían demasiado flojas, por eso se usan juegos más gruesos y escalas más largas."},
+  {id:"dropD",g:"Drops (la 6ª más grave)",n:"Drop {r}",open:[38,45,50,55,59,64],s:"La 6ª baja un tono: las tres graves quedan a 5ª y 4ª.",d:"Es la estándar con la 6ª bajada un tono. Las tres cuerdas graves quedan a una 5ª justa y una 4ª, así que pisándolas todas en el mismo traste sale un power chord con un solo dedo. Muy usada en rock y metal."},
+  {id:"dropCs",g:"Drops (la 6ª más grave)",n:"Drop {r}",open:[37,44,49,54,58,63],s:"Medio tono abajo, con la 6ª otro tono más grave.",d:"Medio tono abajo y la 6ª un tono más grave. Conserva el truco del power chord con un dedo, un semitono por debajo del Drop de la estándar."},
+  {id:"dropC",g:"Drops (la 6ª más grave)",n:"Drop {r}",open:[36,43,48,53,57,62],s:"Un tono abajo, con la 6ª otro tono más grave.",d:"Un tono abajo y la 6ª otro tono más: sonido muy grave y compacto, típico del metal. Las tres cuerdas graves siguen formando el power chord de un dedo."},
+  {id:"dropB",g:"Drops (la 6ª más grave)",n:"Drop {r}",open:[35,42,47,52,56,61],s:"Tono y medio abajo, con la 6ª otro tono más grave.",d:"Bajada de tres semitonos con la 6ª un tono más grave. Registro muy grave; necesita cuerdas gruesas para no quedar flojas."},
+  {id:"dropA",g:"Drops (la 6ª más grave)",n:"Drop {r}",open:[33,40,45,50,54,59],s:"Una 4ª abajo, con la 6ª otro tono más grave.",d:"Es la barítona con la 6ª bajada un tono. El extremo grave de los drops de guitarra de 6 cuerdas."},
+  {id:"ddropD",g:"Drops (la 6ª más grave)",n:"Doble Drop {r}",rp:2,open:[38,45,50,55,59,62],s:"La 6ª y la 1ª bajan un tono.",d:"La 6ª y la 1ª bajan un tono: las dos cuerdas extremas quedan en la misma nota, con dos octavas de distancia. Resuena mucho y es muy popular en el folk-rock."},
+  {id:"openD",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r}",rp:2,open:[38,45,50,54,57,62],s:"Sin pisar nada suena un acorde mayor.",d:"Las cuerdas al aire forman un acorde mayor. Con un solo dedo (o un slide) cruzando todas las cuerdas tienes un acorde mayor en cualquier traste: es la base del slide y del blues de raíz."},
+  {id:"openDm",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r} menor",rp:2,open:[38,45,50,53,57,62],s:"Sin pisar nada suena un acorde menor.",d:"Igual que la abierta mayor, pero la 3ª baja un semitono: las cuerdas al aire forman un acorde menor, más oscuro. Con un dedo cruzando las cuerdas sale un menor en cualquier traste."},
+  {id:"openG",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r}",rp:7,open:[38,43,50,55,59,62],s:"Sin pisar nada suena un acorde mayor.",d:"Las cuerdas al aire forman un acorde mayor y la 6ª queda grave, como en la Drop. Es la favorita del slide y del rock de raíces."},
+  {id:"openE",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r}",rp:4,open:[40,47,52,56,59,64],s:"Sin pisar nada suena un acorde mayor.",d:"Las cuerdas al aire forman un acorde mayor, con una tensión parecida a la de subir la afinación abierta de Re. Muy usada con slide."},
+  {id:"openA",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r}",rp:9,open:[40,45,52,57,61,64],s:"Sin pisar nada suena un acorde mayor.",d:"Las cuerdas al aire forman un acorde mayor, con las dos cuerdas graves como en la estándar. Cómoda para pasar de estándar a abierta sin cambiar demasiado."},
+  {id:"openC",g:"Abiertas (las cuerdas al aire forman un acorde)",n:"Abierta en {r}",rp:0,open:[36,43,48,55,60,64],s:"Sin pisar nada suena un acorde mayor.",d:"Las cuerdas al aire forman un acorde mayor con una 6ª muy grave. Sonido amplio, usado en folk y slide."},
+  {id:"dadgad",g:"Alternativas",n:"DADGAD",open:[38,45,50,55,57,62],s:"Modal: sin 3ª entre las cuerdas al aire.",d:"Las cuerdas quedan a 5ª, 4ª, 4ª, 2ª y 4ª: no hay 3ª, así que las cuerdas al aire suenan abiertas, ni mayores ni menores. Muy usada en la música celta y en el fingerstyle."},
+  {id:"fourths",g:"Alternativas",n:"Todas en cuartas",open:[40,45,50,55,60,65],s:"Las seis cuerdas a 4ª justa.",d:"Se sube la 2ª cuerda un semitono para que no haya ninguna 3ª mayor: todas las cuerdas quedan a una 4ª justa. Las formas de acordes y escalas se repiten igual en todas las cuerdas (más regular), a costa de perder los acordes abiertos clásicos."},
+  {id:"nst",g:"Alternativas",n:"Nueva estándar (NST)",open:[36,43,50,57,64,67],s:"Cuatro quintas justas y una 3ª menor arriba: más registro.",d:"Las cuerdas graves a quintas justas amplían el registro: la 6ª es más grave y la 1ª más aguda que en la estándar. La ideó el guitarrista Robert Fripp."}
+ ],
+ bass:[
+  {id:"std",g:"Estándar y bajadas",n:"Estándar",open:[28,33,38,43],s:"Las cuatro cuerdas a 4ª justa.",d:"Las cuatro cuerdas graves de la guitarra, una octava más abajo: cada cuerda a una 4ª justa de la anterior."},
+  {id:"half",g:"Estándar y bajadas",n:"Medio tono abajo",open:[27,32,37,42],s:"Todas las cuerdas un semitono más graves.",d:"Las cuatro cuerdas bajan un semitono. Las formas son las mismas que en la estándar, con un sonido más grave."},
+  {id:"whole",g:"Estándar y bajadas",n:"Un tono abajo",open:[26,31,36,41],s:"Todo dos semitonos más grave.",d:"Todas las cuerdas bajan un tono. Mismas formas, sonido más pesado."},
+  {id:"dropD",g:"Drops (la cuerda grave más abajo)",n:"Drop {r}",open:[26,33,38,43],s:"La cuerda grave baja un tono.",d:"La cuerda más grave baja un tono y queda a una 5ª de la siguiente: pisando las dos graves en el mismo traste suena una quinta con un solo dedo."},
+  {id:"dropC",g:"Drops (la cuerda grave más abajo)",n:"Drop {r}",open:[24,31,36,41],s:"Un tono abajo, con la grave otro tono más.",d:"Un tono abajo y la cuerda grave otro tono más: el registro más grave de un bajo de 4 cuerdas."}
+ ],
+ ukulele:[
+  {id:"std",g:"Afinaciones",n:"Reentrante (estándar)",open:[67,60,64,69],s:"La 4ª cuerda queda más aguda que la 3ª.",d:"La 4ª cuerda no es la más grave: está afinada una octava más alta (afinación reentrante). Eso da el sonido brillante y compacto típico del ukelele."},
+  {id:"low",g:"Afinaciones",n:"Lineal (4ª grave)",open:[55,60,64,69],s:"La 4ª cuerda va una octava más grave.",d:"La 4ª cuerda se afina una octava más grave que en la reentrante: las cuerdas suben en orden y se gana registro grave."},
+  {id:"bari",g:"Afinaciones",n:"Barítono",open:[50,55,59,64],s:"Como las cuatro cuerdas agudas de la guitarra.",d:"Una 4ª justa más grave que la estándar: las cuatro cuerdas quedan como las cuatro agudas de la guitarra, así que se pueden usar sus mismas formas de acorde."},
+  {id:"up",g:"Afinaciones",n:"Reentrante un tono arriba",open:[69,62,66,71],s:"Todo un tono más agudo.",d:"Todo un tono más agudo que la estándar: timbre más brillante y cuerdas más tensas. Mismas formas que en la estándar."}
+ ]
+};
+let tuningId="std";
+const currentTunings=()=>TUNINGS[instrumentKey];
+const currentTuning=()=>currentTunings().find(t=>t.id===tuningId)||currentTunings()[0];
+const tuningRoot=t=>t.rp!==undefined?t.rp:t.open[0]%12;
+const tuningLabel=t=>t.n.replace(/\{r\}/g,nmS(tuningRoot(t)));
+const tuningNotes=t=>t.open.map(o=>nmS(o%12)).join(" ");
+/* Desplazamiento en semitonos respecto a la estándar si TODAS las cuerdas están movidas por igual
+   (medio tono abajo, un tono abajo...): las formas son las mismas y solo cambia cómo suenan. Si no, null. */
+function tuningShift(){
+  const std=INSTRUMENTS[instrumentKey].open,d=OPEN[0]-std[0];
+  return OPEN.every((o,i)=>o-std[i]===d)?d:null;
+}
 let instrumentKey="guitar";
 let OPEN=INSTRUMENTS[instrumentKey].open.slice();
 let SETS=[],SETS7=[];
@@ -1006,8 +1113,9 @@ const CAGED_SHAPES_MIN=[
  {letter:"D",natural:2,frets:[null,null,0,2,3,1],roles:[null,null,"R","5","R","3"]}
 ];
 function cagedShapeAt(shape,rootIndex){
-  const shift=(rootIndex-shape.natural+12)%12;
-  return {letter:shape.letter,name:NN[shape.natural],shift,frets:shape.frets.map(f=>f===null?null:f+shift),roles:shape.roles};
+  const nat=((shape.natural+(tuningShift()||0))%12+12)%12;   // con una bajada uniforme la misma forma suena otra nota
+  const shift=(rootIndex-nat+12)%12;
+  return {letter:shape.letter,name:nmS(nat),shift,frets:shape.frets.map(f=>f===null?null:f+shift),roles:shape.roles};
 }
 
 /* ================= ESTADO ================= */
@@ -1103,8 +1211,13 @@ function findShapeN(strIdxs,pcsOrdered,spanMax,startBase){
    grave a agudo (salvo en afinaciones reentrantes) y no pueden pedir más de 4 dedos. El estiramiento de una
    forma depende solo de las cuerdas y del orden de las notas, no de dónde esté (se repite cada 12 trastes),
    así que si ese tipo de forma no cabe en una mano devuelve null en vez de inventarse algo imposible. */
-function findComfyShape(strs,order){
-  const asc=OPEN.every((o,i)=>i===0||o>OPEN[i-1]);
+function comfyOk(strs,fr,noAsc){
+  const asc=!noAsc&&OPEN.every((o,i)=>i===0||o>OPEN[i-1]);
+  const m=strs.map((s,i)=>OPEN[s]+fr[i]);
+  const f=fr.filter(x=>x>0),minF=f.length?Math.min(...f):0,span=f.length?Math.max(...f)-minF:0;
+  return (!asc||m.every((x,i)=>i===0||x>m[i-1]))&&fingerCount(fr)<=4&&(span<=3||(span===4&&minF>=7));
+}
+function findComfyShape(strs,order,noAsc){
   let best=null,b=0;const seen=new Set();
   while(b<=FRETS-4){
     const fr=findShapeN(strs,order,4,b);
@@ -1112,10 +1225,11 @@ function findComfyShape(strs,order){
     const key=fr.join(",");
     if(!seen.has(key)){
       seen.add(key);
-      const m=strs.map((s,i)=>OPEN[s]+fr[i]);
-      const f=fr.filter(x=>x>0),minF=f.length?Math.min(...f):0,span=f.length?Math.max(...f)-minF:0;
-      const ok=(!asc||m.every((x,i)=>i===0||x>m[i-1]))&&fingerCount(fr)<=4&&(span<=3||(span===4&&minF>=7));
-      if(ok){const score=(span>3?100:0)+minF;if(!best||score<best.score)best={fr,score};}
+      if(comfyOk(strs,fr,noAsc)){
+        const f=fr.filter(x=>x>0),minF=f.length?Math.min(...f):0,span=f.length?Math.max(...f)-minF:0;
+        const score=(span>3?100:0)+minF;
+        if(!best||score<best.score)best={fr,score};
+      }
     }
     b=Math.min(...fr)+1;
   }
@@ -1976,7 +2090,7 @@ function cycleStart(setIdx,isMinor,rootPc){
   const pcs=cycleTriadPCs(rootPc,isMinor);
   const inv=INVS[0]; // fundamental
   const ordered=inv.o.map(oi=>pcs[oi]);
-  const fr=findShapeN(SETS[setIdx].i,ordered,4,0);
+  const fr=findComfyShape(SETS[setIdx].i,ordered,true);
   return fr?{strs:SETS[setIdx].i,frets:fr,roles:inv.r,rootPc}:null;
 }
 function cycleNext(prev,setIdx,isMinor){
@@ -1992,7 +2106,7 @@ function cycleNext(prev,setIdx,isMinor){
     const ordered=inv.o.map(oi=>pcs[oi]);
     if(ordered[k]!==pcs[0])continue;
     const fr=findShapeFixed(SETS[setIdx].i,ordered,k,newRootFret,4,4);
-    if(fr)return{strs:SETS[setIdx].i,frets:fr,roles:inv.r,rootPc:newRootPc};
+    if(fr&&comfyOk(SETS[setIdx].i,fr,true))return{strs:SETS[setIdx].i,frets:fr,roles:inv.r,rootPc:newRootPc};
   }
   return null;
 }
@@ -2005,7 +2119,7 @@ function cycleReset(){
 function renderCycle(){
   const ss=document.getElementById("selCycleSet");ss.innerHTML="";SETS.forEach((s,i)=>ss.add(new Option(s.l,i)));if(cycleSetIdx>=SETS.length)cycleSetIdx=0;
   ss.value=cycleSetIdx;
-  if(!cycleHistory.length)cycleReset();
+  if(!cycleHistory.length){const st=cycleStart(cycleSetIdx,false,root);cycleHistory=st?[st]:[];cycleIdx=0;}
   const shape=cycleHistory[cycleIdx];
   document.getElementById("cycleStep").textContent=`Paso ${cycleIdx+1}/${cycleHistory.length}`;
   document.getElementById("btnCyclePrev").disabled=cycleIdx===0;
@@ -2296,7 +2410,7 @@ function saveLick(){
     id:Date.now(),
     name:name.trim()||defaultName,
     date:new Date().toLocaleDateString(),
-    root,instrumentKey,scaleKind:lickScaleKind,tempo:lickTempo,
+    root,instrumentKey,tuningId,scaleKind:lickScaleKind,tempo:lickTempo,
     seq:lickSeq.map(n=>({s:n.s,f:n.f,pc:n.pc,link:n.link,expr:n.expr}))
   });
   setSavedLicks(list);
@@ -2305,10 +2419,12 @@ function saveLick(){
 function loadLick(id){
   const item=getSavedLicks().find(x=>x.id===id);
   if(!item)return;
+  const wantT=item.tuningId||"std";
   if(item.instrumentKey!==instrumentKey&&INSTRUMENTS[item.instrumentKey]){
     document.getElementById("selInstrument").value=item.instrumentKey;
     setInstrument(item.instrumentKey);
   }
+  if(wantT!==tuningId&&currentTunings().some(t=>t.id===wantT))setTuning(wantT);
   root=item.root;
   document.getElementById("selRoot").value=root;
   lickScaleKind=item.scaleKind;
@@ -2330,7 +2446,7 @@ function renderSavedLicks(){
   wrap.innerHTML=list.map(item=>{
     const instName=(INSTRUMENTS[item.instrumentKey]||{}).name||item.instrumentKey;
     return `<div class="saved-lick-item" data-id="${item.id}">
-      <div><b>${item.name}</b><span class="muted" style="font-size:11px;display:block">${NN[item.root%12]} · ${item.date} · ${instName} · ${item.seq.length} notas</span></div>
+      <div><b>${item.name}</b><span class="muted" style="font-size:11px;display:block">${NN[item.root%12]} · ${item.date} · ${instName}${item.tuningId&&item.tuningId!=="std"&&(TUNINGS[item.instrumentKey]||[]).find(t=>t.id===item.tuningId)?" ("+tuningLabel(TUNINGS[item.instrumentKey].find(t=>t.id===item.tuningId))+")":""} · ${item.seq.length} notas</span></div>
       <div class="sl-actions"><button class="btn" data-act="open">▶ Abrir</button><button class="btn" data-act="del">🗑</button></div>
     </div>`;
   }).join("");
@@ -3016,8 +3132,8 @@ function playPower(){
 /* ---- Blues de 12 compases ---- */
 const bluesVoicingCache=new Map();
 function bluesVoicing(rootPc,q,target){
-  const key=rootPc+"_"+q;
-  if(!bluesVoicingCache.has(key)||bluesVoicingCache.get(key).n!==OPEN.length)bluesVoicingCache.set(key,{n:OPEN.length,v:chordVoicings(rootPc,tplByQ(q),5)});
+  const key=OPEN.join(",")+"_"+rootPc+"_"+q;
+  if(!bluesVoicingCache.has(key))bluesVoicingCache.set(key,{n:OPEN.length,v:chordVoicings(rootPc,tplByQ(q),5)});
   const vs=bluesVoicingCache.get(key).v;
   return vs.length?vs.slice().sort((a,b)=>Math.abs(a.pos-target)-Math.abs(b.pos-target))[0]:null;
 }
@@ -3107,6 +3223,71 @@ function renderTuner(){
   document.getElementById("tuneHint").textContent=pairs.children.length
     ?"Se suenan primero la nota pisada, luego la cuerda de al lado al aire, y al final las dos a la vez: si están afinadas suenan como una sola nota; si no, se oye un \"batido\" que se ralentiza al acercarte. Termina siempre apretando la clavija (llegando a la nota desde abajo): así la cuerda se mantiene afinada más tiempo."
     :"Con esta afinación no hay pares de cuerdas que se igualen pisando un traste, pero puedes comparar cada cuerda al aire con una referencia.";
+}
+/* ================= RENDER: AFINACIONES Y DROPS ================= */
+const TUNE_IV={1:"2ª menor",2:"2ª mayor",3:"3ª menor",4:"3ª mayor",5:"4ª justa",6:"tritono",7:"5ª justa",8:"6ª menor",9:"6ª mayor",10:"7ª menor",11:"7ª mayor",12:"octava"};
+const tuneGapText=g=>{const a=Math.abs(g);return `${g<0?"−":"+"}${a} st · ${TUNE_IV[a]||a+" st"}${g<0?" (hacia abajo)":""}`;};
+let tuneBoardMode="all";
+/* Texto de la pista de Intervalos: los saltos reales entre cuerdas de la afinación activa */
+function updateStringGapsHint(){
+  const el=document.getElementById("ivStringsHint");if(!el)return;
+  const gaps=[];for(let s=0;s+1<OPEN.length;s++)gaps.push(OPEN[s+1]-OPEN[s]);
+  const t=currentTuning();
+  const parts=gaps.map(g=>`${g>0?"+":""}${g}`).join(" · ");
+  el.innerHTML=new Set(gaps).size===1
+    ?`💡 En ${INSTRUMENTS[instrumentKey].name.toLowerCase()} (${tuningLabel(t)}): todos los saltos entre cuerdas son iguales (${parts} semitonos, ${TUNE_IV[Math.abs(gaps[0])]||""}), así que las formas se repiten idénticas en todas las cuerdas.`
+    :`💡 En ${INSTRUMENTS[instrumentKey].name.toLowerCase()} (${tuningLabel(t)}): de cada cuerda a la siguiente (grave → aguda) hay ${parts} semitonos. Por eso las formas de los acordes cambian cada vez que cruzas un salto distinto.`;
+}
+function playTuning(){try{arp(OPEN.slice(),.38,1.6);}catch(e){console.warn("Audio no disponible:",e);}}
+function renderTunings(){
+  const t=currentTuning(),N=OPEN.length,std=INSTRUMENTS[instrumentKey].open;
+  // 1) tarjetas de afinaciones, por grupos
+  const gbox=document.getElementById("tuningGroups");gbox.innerHTML="";
+  const groups=[];
+  currentTunings().forEach(x=>{let g=groups.find(y=>y.l===x.g);if(!g){g={l:x.g,items:[]};groups.push(g);}g.items.push(x);});
+  groups.forEach(g=>{
+    const hd=document.createElement("h3");hd.textContent=g.l;gbox.appendChild(hd);
+    const grid=document.createElement("div");grid.className="modegrid";
+    g.items.forEach(x=>{
+      const b=document.createElement("button");b.className="modecard"+(x.id===tuningId?" on":"");
+      b.innerHTML=`<b>${tuningLabel(x)}</b><div class="mf">${tuningNotes(x)}</div><div class="md">${x.s}</div>`;
+      b.onclick=()=>{setTuning(x.id);playTuning();};
+      grid.appendChild(b);
+    });
+    gbox.appendChild(grid);
+  });
+  // 2) detalle y tabla de cuerdas
+  document.getElementById("tuningTitle").textContent=`${tuningLabel(t)} · ${tuningNotes(t)}`;
+  document.getElementById("tuningDesc").textContent=t.d;
+  let rows=`<tr><th>Cuerda</th><th>Nota</th><th>Frecuencia</th><th>Respecto a la estándar</th><th>Hasta la siguiente</th><th></th></tr>`;
+  for(let s=0;s<N;s++){
+    const dlt=OPEN[s]-std[s];
+    const vs=dlt===0?"igual":`${Math.abs(dlt)} st más ${dlt<0?"grave":"aguda"}`;
+    const nx=s+1<N?tuneGapText(OPEN[s+1]-OPEN[s]):"—";
+    rows+=`<tr><td><b>${N-s}ª</b></td><td>${nmS(OPEN[s]%12)}</td><td class="muted">${midiFreq(OPEN[s]).toFixed(1)} Hz</td><td${dlt===0?' class="muted"':""}>${vs}</td><td class="muted">${nx}</td><td><button class="btn" data-s="${s}" style="padding:4px 10px">▶</button></td></tr>`;
+  }
+  const tbl=document.getElementById("tuningTable");tbl.innerHTML=rows;
+  tbl.querySelectorAll("button[data-s]").forEach(b=>b.onclick=()=>{const s=+b.dataset.s;flashShapePositions("fbTunings",[[{s,f:0}]],.9);try{pluck(OPEN[s],ctx().currentTime,3.2);}catch(e){console.warn("Audio no disponible:",e);}});
+  document.getElementById("btnTuningPlay").onclick=playTuning;
+  // 3) qué cambia
+  const items=[],sh=tuningShift();
+  if(sh===0)items.push("Es la afinación de referencia: todo lo que ves en la app está pensado para ella.");
+  else if(sh!==null){const q=Math.abs(sh);items.push(`Todas las cuerdas están ${q} semitono${q>1?"s":""} más ${sh<0?"graves":"agudas"} que en la estándar. Las formas y los trastes son los mismos, pero lo que tocas como <b>${nmS(0)}</b> suena como <b>${nmS(((sh%12)+12)%12)}</b>.`);}
+  else items.push("Las cuerdas ya no guardan las mismas distancias que en la estándar, así que <b>las formas de los acordes cambian</b>: la app recalcula las digitaciones (acordes, triadas, arpegios, power chords...) para esta afinación.");
+  if(N>=3&&OPEN[1]-OPEN[0]===7&&OPEN[2]-OPEN[1]===5)items.push("Las dos cuerdas más graves están a una 5ª justa y la tercera a una 4ª: <b>pisando las tres en el mismo traste sale un power chord con un solo dedo</b>.");
+  const gaps=[];for(let s=0;s+1<N;s++)gaps.push(OPEN[s+1]-OPEN[s]);
+  items.push(`Saltos entre cuerdas (grave → aguda): <b>${gaps.map(g=>g>0?"+"+g:g).join(" · ")}</b> semitonos.`);
+  if(INSTRUMENTS[instrumentKey].hasCaged)items.push(sh!==null?"La pestaña CAGED sigue disponible: sus formas se desplazan con la afinación.":"La pestaña CAGED no está disponible: sus formas son de acordes abiertos en estándar (o bajada por igual).");
+  document.getElementById("tuningChanges").innerHTML=items.map(x=>`<li>${x}</li>`).join("");
+  // 4) mástil con todas las notas
+  document.querySelectorAll("#segTuneBoard button").forEach(b=>b.classList.toggle("on",b.dataset.v===tuneBoardMode));
+  const el=document.getElementById("fbTunings");const geo=fbBase(el);
+  const NAT=[0,2,4,5,7,9,11];
+  for(let s=0;s<N;s++)for(let f=0;f<=12;f++){
+    const pc=(OPEN[s]+f)%12,nat=NAT.includes(pc),isR=pc===root%12;
+    if(tuneBoardMode==="nat"&&!nat&&!isR)continue;
+    addDot(el,geo,s,f,nmS(pc),isR?"#C9A227":nat?"#4FA8A0":"#7C86A6",isR,false,()=>{try{pluck(OPEN[s]+f,ctx().currentTime);}catch(e){console.warn("Audio no disponible:",e);}});
+  }
 }
 /* ================= RENDER: CAGED ================= */
 function renderCaged(){
@@ -3502,7 +3683,7 @@ function renderCondGated(tabId,renderFn,tabLabel,explain,cond,gateClass){
 function renderAll(){
   if(tab!=="prog")stopProg();
   if(tab!=="blues"){stopBlues();pwTimers.forEach(clearTimeout);pwTimers=[];}
-  ["intervalos","escala","modos","circulo","armonia","septimas","cuartas","triadas","arpegios","licks","caged","finder","prog","blues","practica","ayuda"].forEach(t=>document.getElementById("tab-"+t).hidden=(t!==tab));
+  ["intervalos","afinaciones","escala","modos","circulo","armonia","septimas","cuartas","triadas","arpegios","licks","caged","finder","prog","blues","practica","ayuda"].forEach(t=>document.getElementById("tab-"+t).hidden=(t!==tab));
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));
   const tabsToggleLabel=document.getElementById("tabsToggleLabel");
   const activeTabBtn=document.querySelector("#tabs button.on");
@@ -3518,15 +3699,18 @@ function renderAll(){
   if(tab==="triadas")renderModoGated("triadas",renderTriads,"Triadas e inversiones","Las triadas de esta pestaña son las que salen de armonizar cada grado de la escala de 7 notas.",renderCycle);
   if(tab==="arpegios")renderModoGated("arpegios",renderArpeggios,"Arpegios","Los arpegios aquí son los de las triadas armonizadas grado a grado, igual que en Triadas.");
   if(tab==="licks")renderLicksTab();
-  if(tab==="caged")renderCondGated("caged",renderCaged,"CAGED","Las 5 formas de acorde abierto (C-A-G-E-D) son una tradición específica de la guitarra de 6 cuerdas con afinación estándar. No existe un equivalente directo en "+INSTRUMENTS[instrumentKey].name.toLowerCase()+" — cambia a Guitarra arriba para usar esta pestaña.",()=>INSTRUMENTS[instrumentKey].hasCaged,"instrument-gate");
+  if(tab==="caged")renderCondGated("caged",renderCaged,"CAGED",(INSTRUMENTS[instrumentKey].hasCaged?"Las 5 formas de acorde abierto (C-A-G-E-D) son acordes de guitarra en afinación estándar (o bajada por igual, como medio tono abajo). Con «"+tuningLabel(currentTuning())+"» las cuerdas ya no guardan esas distancias — elige una afinación estándar o bajada, arriba, para usar esta pestaña.":"Las 5 formas de acorde abierto (C-A-G-E-D) son una tradición específica de la guitarra de 6 cuerdas con afinación estándar. No existe un equivalente directo en "+INSTRUMENTS[instrumentKey].name.toLowerCase()+" — cambia a Guitarra arriba para usar esta pestaña."),()=>INSTRUMENTS[instrumentKey].hasCaged&&tuningShift()!==null,"instrument-gate");
   if(tab==="finder"){renderBuilder();renderFinder();renderDimSym();}
+  if(tab==="afinaciones")renderTunings();
+  updateStringGapsHint();
   if(tab==="prog")renderProg();
   if(tab==="blues")renderBlues();
   if(tab==="practica")renderQuiz();
 }
-function setInstrument(key){
-  instrumentKey=key;
-  OPEN=INSTRUMENTS[key].open.slice();
+/* Aplica la afinación actual: cambia OPEN y reajusta todo lo que depende del nº/orden de cuerdas */
+function applyOpen(){
+  OPEN=currentTuning().open.slice();
+  bluesVoicingCache.clear();
   rebuildStringSets();
   // los índices de juego de cuerdas pueden quedar fuera de rango con menos cuerdas: los reseteamos
   ssIdx=Math.min(ssIdx,SETS.length-1);
@@ -3535,26 +3719,39 @@ function setInstrument(key){
   arpSet7=Math.min(arpSet7,SETS7.length-1);
   quartSetIdx=Math.min(quartSetIdx,(quartVoices===3?SETS:SETS7).length-1);
   cycleSetIdx=Math.min(cycleSetIdx,SETS.length-1);
-  cycleHistory=[];cycleIdx=0;
-  renderAll();
+  cycleHistory=[];cycleIdx=0;tunePair=null;
 }
-function setNoteSystem(sys){
-  noteSystem=sys;
-  NN=(sys==="en"?NN_EN:NN_LATIN).slice();
-  const sr=document.getElementById("selRoot");
-  const cur=sr.value;
-  sr.innerHTML="";
-  NN.forEach((n,i)=>sr.add(new Option(n,i)));
-  sr.value=cur;
-  renderAll();
+function setInstrument(key){
+  instrumentKey=key;tuningId=TUNINGS[key][0].id;
+  applyOpen();refreshTuningSelect();renderAll();
 }
+function setTuning(id){
+  if(!currentTunings().some(t=>t.id===id))return;
+  tuningId=id;applyOpen();refreshTuningSelect();renderAll();
+}
+function refreshNoteSelect(){
+  const sr=document.getElementById("selRoot");const cur=sr.value;
+  sr.innerHTML="";NN.forEach((n,i)=>sr.add(new Option(n.replace("#","♯"),i)));sr.value=cur;
+}
+function refreshTuningSelect(){
+  const sel=document.getElementById("selTuning");sel.innerHTML="";
+  const groups=[];
+  currentTunings().forEach(t=>{let g=groups.find(x=>x.l===t.g);if(!g){g={l:t.g,items:[]};groups.push(g);}g.items.push(t);});
+  groups.forEach(g=>{const og=document.createElement("optgroup");og.label=g.l;g.items.forEach(t=>og.appendChild(new Option(`${tuningLabel(t)} · ${tuningNotes(t)}`,t.id)));sel.appendChild(og);});
+  sel.value=tuningId;
+}
+function setNoteSystem(sys){noteSystem=sys;rebuildNN();refreshNoteSelect();refreshTuningSelect();renderAll();}
+function setAccidental(a){accidental=a;rebuildNN();refreshNoteSelect();refreshTuningSelect();renderAll();}
 rebuildStringSets();
 const si2=document.getElementById("selInstrument");
 Object.keys(INSTRUMENTS).forEach(k=>si2.add(new Option(INSTRUMENTS[k].name,k)));
 si2.value=instrumentKey;
 si2.onchange=e=>setInstrument(e.target.value);
 document.getElementById("selNoteSystem").onchange=e=>setNoteSystem(e.target.value);
-const sr=document.getElementById("selRoot");NN.forEach((n,i)=>sr.add(new Option(n,i)));
+document.getElementById("selAccidental").onchange=e=>setAccidental(e.target.value);
+document.getElementById("selTuning").onchange=e=>setTuning(e.target.value);
+refreshTuningSelect();
+const sr=document.getElementById("selRoot");NN.forEach((n,i)=>sr.add(new Option(n.replace("#","♯"),i)));
 sr.onchange=e=>{root=+e.target.value;buildRoot=root;renderAll();};
 const sm=document.getElementById("selMode");
 {const og1=document.createElement("optgroup");og1.label="Modos (7 notas)";
